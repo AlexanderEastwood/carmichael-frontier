@@ -1,0 +1,24 @@
+# build artifacts
+*.o
+*.obj
+*.out
+a.out
+# compiled engine binaries (build from source)
+src/carmichael
+src/carmichael_m1
+src/carmichael_m2
+src/carmichael_star
+src/carmichael_star_rec
+src/carmichael_par
+src/mitm
+src/mitm64
+src/mitm64_fixed
+# python
+__pycache__/
+*.pyc
+.venv/
+# run state (large / machine-specific)
+run_k*.log
+checkpoint_k*.json
+*.tmp
+.DS_Store
