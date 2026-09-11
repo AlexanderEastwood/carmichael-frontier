@@ -113,7 +113,7 @@ also validated end-to-end against OEIS A006931: it reproduces `S_10 … S_29` ex
 - Pushing toward 10¹⁴⁷ (each extra digit is ≈10⁵× more work) and, ultimately, the full `[…,N]`
   certification that would prove `S₆₄ = N` — a machine-scale endgame (≈ thread-years), not a rerun.
 
-## Companion result: S₆₅ ≥ 10¹⁴⁸ (≥ 149 digits)
+## Companion result: S₆₅ ∈ [10¹⁴⁸, U₆₅] — 149, 150, or 151 digits
 
 The same cofactor minimum transfers one factor count up, with **no new exhaustion**. Let
 `A₆₄ = 4411…943377` (145 digits) be the least product of 64 pairwise-admissible odd primes — it is
@@ -122,7 +122,7 @@ For any 65-factor Carmichael `n` and any prime `q | n`, the other 64 factors are
 64-product, so `n/q ≥ A₆₄`, giving `P⁺(n) ≤ ⌊(n−1)/A₆₄⌋`. Below `10¹⁴⁸` that caps the universe at
 **334 odd primes** (P⁺ ≤ 2266). An exhaustive search finds **no** 65-factor Carmichael there:
 
-$$S_{65} \ge 10^{148}, \qquad\text{so the smallest 65-factor Carmichael number has} \ge 149 \text{ digits.}$$
+$$S_{65} \ge 10^{148} \quad\text{(the lower half; the verified upper bound below closes the interval).}$$
 
 **Reproduced four ways** (all 0 Carmichael): the certificate [`s65/s65_exclusion.py`](s65/s65_exclusion.py)
 (64,355 nodes, 66 progression candidates); a separate native binary enumeration
@@ -134,8 +134,15 @@ counts (5012 inversions, 66 progression candidates). A companion
 the same triple-verified `A₆₄`. The universe cap ladder: P⁺ ≤ 2266 / 22666 / 226668 / **2,266,687**
 for a 65-factor Carmichael below 10¹⁴⁸ / 10¹⁴⁹ / 10¹⁵⁰ / 10¹⁵¹.
 
-**Upper bound.** Webster reports a 151-digit k=65 candidate; it is **not independently verified here**.
-Confirming it would pin `S₆₅` to **149–151 digits**. (`S₆₅` does not depend on determining `S₆₄`.)
+**Upper bound (now verified).** Webster's 151-digit k=65 candidate `U₆₅` is confirmed a genuine
+Carmichael number with exactly 65 prime factors: it factors completely over the proven ≤2,266,687
+universe into 65 distinct primes (19…1993, product = n), and the frozen oracle confirms Korselt.
+Factor list in [`results_k65_webster_verified.json`](results_k65_webster_verified.json). So
+
+$$10^{148} \le S_{65} \le U_{65}, \qquad S_{65}\text{ has } 149,\ 150,\text{ or } 151 \text{ digits.}$$
+
+Both ends are verified — the lower by the A₆₄ transfer + exhaustion (4 ways), the upper by
+independent factorization + oracle Korselt. (`S₆₅` does not depend on determining `S₆₄`.)
 
 ## Provenance / credit
 

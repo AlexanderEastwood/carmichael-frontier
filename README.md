@@ -13,9 +13,10 @@ built to help push the frontier past the current record — and used here to fin
 > with the universe bound independently recomputed. A search-engine strengthening excludes every
 > 64-factor Carmichael `≤ 10¹⁴⁶` (`n=NONE`, ~71 s), so in fact **S₆₄ has 147 or 148 digits** — held
 > to a slightly lower verification tier pending an independent certificate (see the note). The same
-> cofactor minimum transfers to the next factor count: **S₆₅ ≥ 10¹⁴⁸ (≥ 149 digits)**, reproduced
-> four ways ([`s65/`](s65/)). These are global bounds on the minima — **not** determinations of
-> them. Full write-up: [`INTERVAL_THEOREM.md`](INTERVAL_THEOREM.md) and
+> cofactor minimum transfers to the next factor count: **S₆₅ ∈ [10¹⁴⁸, U₆₅] — 149, 150, or 151
+> digits** (lower bound reproduced four ways in [`s65/`](s65/); upper bound U₆₅ = Webster's 151-digit
+> candidate, independently factored over the proven ≤2.27M universe and oracle-verified). These are
+> global bounds on the minima — **not** determinations of them. Full write-up: [`INTERVAL_THEOREM.md`](INTERVAL_THEOREM.md) and
 > [`paper/interval_theorem.tex`](paper/interval_theorem.tex).
 
 Everything here is our own code, developed beside — not committed to — Jonathan Webster's

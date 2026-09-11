@@ -39,9 +39,9 @@ so $\Smin$ has $146$, $147$, or $148$ decimal digits. All arithmetic is exact. T
 a reproducible computation: the admissible universe is bounded by a Korselt cofactor argument, the
 resulting bound is recomputed independently, and the exhaustion is carried out by three separate
 enumeration implementations, one of which takes its Korselt verdict at every leaf from a frozen
-reference oracle. The same cofactor minimum transfers to the next factor count: we prove
-$S_{65}\ge 10^{148}$, so the smallest $65$-factor Carmichael number has at least $149$ digits
-(\S\ref{sec:s65}). The author is responsible for the mathematics and code; see the acknowledgements
+reference oracle. The same cofactor minimum transfers to the next factor count, giving
+$10^{148}\le S_{65}\le U_{65}$ for an explicit verified $151$--digit Carmichael number $U_{65}$, so
+the smallest $65$--factor Carmichael number has $149$, $150$, or $151$ digits (\S\ref{sec:s65}). The author is responsible for the mathematics and code; see the acknowledgements
 for the role of AI assistance.
 \end{abstract}
 
@@ -284,10 +284,24 @@ counts ($5012$ inversions, $66$ progression candidates). A companion certificate
 \code{s65/s65\_transfer\_certificate.py} establishes the weaker $S_{65}\ge 3.17\times10^{147}$ by
 extending the recorded $64$--products two independent ways ($285$ admissible $65$--products, $0$
 Carmichael). All rest on the same $A_{64}$, whose defining $127092$--product set and digest are the
-triple--verified core of \S\ref{sec:lower}. An upper bound for $S_{65}$ (Webster reports a
-$151$--digit candidate) is not independently verified here; confirming it would pin $S_{65}$ to
-$149$--$151$ digits.
+triple--verified core of \S\ref{sec:lower}.
 \end{remark}
+
+\begin{theorem}[Interval for $S_{65}$]\label{thm:s65interval}
+$10^{148}\le S_{65}\le U_{65}$, where $U_{65}$ is the $151$--digit Carmichael number with exactly $65$
+prime factors $19,31,37,\dots,1021,1993$ (Webster's candidate). Consequently $S_{65}$ has $149$,
+$150$, or $151$ decimal digits.
+\end{theorem}
+
+\begin{proof}
+The lower bound is Theorem~\ref{thm:s65}. For the upper bound: by Lemma~\ref{lem:transfer} every
+$65$--factor Carmichael below $10^{151}$ has all prime factors $\le\lfloor(10^{151}-1)/A_{64}\rfloor=
+2266687$, so $U_{65}$ (being $<10^{151}$) factors completely over that range. Independent trial
+division confirms $U_{65}$ is a product of exactly $65$ distinct primes $\le 1993$; the frozen oracle
+\code{ref/ref\_carmichael.py::verify\_certificate} confirms Korselt, so $U_{65}$ is Carmichael with
+$\omega=65$ and $S_{65}\le U_{65}$. As $U_{65}$ has $151$ digits and $S_{65}\ge10^{148}$ has at least
+$149$, the interval follows. (Factor list in \code{results\_k65\_webster\_verified.json}.)
+\end{proof}
 
 \section*{Acknowledgements}
 
