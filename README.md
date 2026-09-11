@@ -12,9 +12,11 @@ built to help push the frontier past the current record — and used here to fin
 > admissible products below 10¹⁴⁵, zero Carmichael) by three separate enumeration implementations,
 > with the universe bound independently recomputed. A search-engine strengthening excludes every
 > 64-factor Carmichael `≤ 10¹⁴⁶` (`n=NONE`, ~71 s), so in fact **S₆₄ has 147 or 148 digits** — held
-> to a slightly lower verification tier pending an independent certificate (see the note). This is a
-> global bound on the minimum — **not** a determination of it. Full write-up:
-> [`INTERVAL_THEOREM.md`](INTERVAL_THEOREM.md) and [`paper/interval_theorem.tex`](paper/interval_theorem.tex).
+> to a slightly lower verification tier pending an independent certificate (see the note). The same
+> cofactor minimum transfers to the next factor count: **S₆₅ ≥ 10¹⁴⁸ (≥ 149 digits)**, reproduced
+> four ways ([`s65/`](s65/)). These are global bounds on the minima — **not** determinations of
+> them. Full write-up: [`INTERVAL_THEOREM.md`](INTERVAL_THEOREM.md) and
+> [`paper/interval_theorem.tex`](paper/interval_theorem.tex).
 
 Everything here is our own code, developed beside — not committed to — Jonathan Webster's
 [`small-carmichael-numbers`](https://github.com/jewebste/small-carmichael-numbers), whose

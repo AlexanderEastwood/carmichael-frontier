@@ -113,6 +113,30 @@ also validated end-to-end against OEIS A006931: it reproduces `S_10 … S_29` ex
 - Pushing toward 10¹⁴⁷ (each extra digit is ≈10⁵× more work) and, ultimately, the full `[…,N]`
   certification that would prove `S₆₄ = N` — a machine-scale endgame (≈ thread-years), not a rerun.
 
+## Companion result: S₆₅ ≥ 10¹⁴⁸ (≥ 149 digits)
+
+The same cofactor minimum transfers one factor count up, with **no new exhaustion**. Let
+`A₆₄ = 4411…943377` (145 digits) be the least product of 64 pairwise-admissible odd primes — it is
+exactly the **minimum of the 127,092 admissible 64-products** recorded above (same `e05f62…` digest).
+For any 65-factor Carmichael `n` and any prime `q | n`, the other 64 factors are a pairwise-admissible
+64-product, so `n/q ≥ A₆₄`, giving `P⁺(n) ≤ ⌊(n−1)/A₆₄⌋`. Below `10¹⁴⁸` that caps the universe at
+**334 odd primes** (P⁺ ≤ 2266). An exhaustive search finds **no** 65-factor Carmichael there:
+
+$$S_{65} \ge 10^{148}, \qquad\text{so the smallest 65-factor Carmichael number has} \ge 149 \text{ digits.}$$
+
+**Reproduced four ways** (all 0 Carmichael): the certificate [`s65/s65_exclusion.py`](s65/s65_exclusion.py)
+(64,355 nodes, 66 progression candidates); a separate native binary enumeration
+[`s65/verify65.cpp`](s65/verify65.cpp) checking all **22,287,138** admissible 65-products below 10¹⁴⁸;
+and our preproduct engine `cm_dynt 65` in both switch modes — which reports `n=NONE` with **matching**
+counts (5012 inversions, 66 progression candidates). A companion
+[`s65/s65_transfer_certificate.py`](s65/s65_transfer_certificate.py) proves the weaker
+`S₆₅ ≥ 3.17×10¹⁴⁷` two more independent ways (285 admissible 65-products, 0 Carmichael). All rest on
+the same triple-verified `A₆₄`. The universe cap ladder: P⁺ ≤ 2266 / 22666 / 226668 / **2,266,687**
+for a 65-factor Carmichael below 10¹⁴⁸ / 10¹⁴⁹ / 10¹⁵⁰ / 10¹⁵¹.
+
+**Upper bound.** Webster reports a 151-digit k=65 candidate; it is **not independently verified here**.
+Confirming it would pin `S₆₅` to **149–151 digits**. (`S₆₅` does not depend on determining `S₆₄`.)
+
 ## Provenance / credit
 
 Known values `3 ≤ k ≤ 63` (as of Sept 2026): R. G. E. Pinch (earlier `k`) and the Butler University

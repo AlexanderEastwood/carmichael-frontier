@@ -18,7 +18,7 @@
 \newcommand{\Pp}{P^{+}}
 \newcommand{\code}[1]{\texttt{#1}}
 
-\title{An interval for $S_{64}$, the smallest Carmichael number\\ with exactly 64 prime factors}
+\title{Intervals for $S_{64}$ and $S_{65}$, the smallest Carmichael numbers\\ with exactly $64$ and $65$ prime factors}
 \author{Alexander Eastwood}
 \date{September 11, 2026}
 
@@ -39,7 +39,9 @@ so $\Smin$ has $146$, $147$, or $148$ decimal digits. All arithmetic is exact. T
 a reproducible computation: the admissible universe is bounded by a Korselt cofactor argument, the
 resulting bound is recomputed independently, and the exhaustion is carried out by three separate
 enumeration implementations, one of which takes its Korselt verdict at every leaf from a frozen
-reference oracle. The author is responsible for the mathematics and code; see the acknowledgements
+reference oracle. The same cofactor minimum transfers to the next factor count: we prove
+$S_{65}\ge 10^{148}$, so the smallest $65$-factor Carmichael number has at least $149$ digits
+(\S\ref{sec:s65}). The author is responsible for the mathematics and code; see the acknowledgements
 for the role of AI assistance.
 \end{abstract}
 
@@ -234,6 +236,57 @@ both returning ``none'' and by the same engine reproducing ``none'' at $10^{145}
 independent confirmation of that bound) and reproducing $S_{10}\dots S_{29}$ against
 OEIS~A006931. An independent admissibility certificate at $10^{146}$ is the outstanding follow--up;
 the full exclusion of $[10^{145},N)$ that would prove $\Smin=N$ remains a machine--scale endgame.
+\end{remark}
+
+\section{Transfer to $S_{65}$}\label{sec:s65}
+
+The cofactor machinery transfers to $k=65$ with no new exhaustion. Let
+\[
+  A_{64}\;=\;\min\{\,\textstyle\prod_{i=1}^{64}p_i : p_1<\dots<p_{64}\text{ odd primes, pairwise admissible}\,\}
+\]
+be the least product of $64$ pairwise--admissible odd primes. The enumeration of \S\ref{sec:lower}
+records it as a by--product: it is the minimum over the $127092$ admissible $64$--products below
+$10^{145}$ (that this global minimum lies below $10^{145}$ is witnessed by those products), namely the
+explicit $145$--digit integer
+\[
+  A_{64}=4411723654458811690564281091321000614852933427803594841106730678799037685864777959408045502066896318764081869632059317133390275833282396201943377 .
+\]
+
+\begin{lemma}[Cofactor transfer]\label{lem:transfer}
+For every Carmichael number $n$ with $\omega(n)=65$ and every prime $q\mid n$, the remaining $64$
+factors form a pairwise--admissible $64$--product (Lemma~\ref{lem:adm}), so $n/q\ge A_{64}$. Hence any
+such $n<U$ has $\Pp(n)\le\lfloor(U-1)/A_{64}\rfloor$.
+\end{lemma}
+
+Taking $U=10^{148}$ gives $\Pp\le 2266$: a universe of $334$ odd primes.
+
+\begin{theorem}[Lower bound for $S_{65}$]\label{thm:s65}
+There is no Carmichael number $n<10^{148}$ with $\omega(n)=65$. Hence $S_{65}\ge 10^{148}$, and the
+smallest $65$--factor Carmichael number has at least $149$ digits.
+\end{theorem}
+
+\begin{proof}[Proof (finite exhaustion)]
+By Lemma~\ref{lem:transfer} every candidate is a product of $65$ distinct primes from the $334$--prime
+universe with product $<10^{148}$. An ordered--prefix search with exact product pruning descends until
+$P\lambda(P)>10^{148}$ and then tests the at most one cofactor in the forced residue class
+$R\equiv P^{-1}\pmod{\lambda(P)}$, enforcing $65$ distinct factors and full Korselt with primality
+taken from the sieve. It visits $64355$ nodes, forms $66$ progression candidates, and finds no
+Carmichael number.
+\end{proof}
+
+\begin{remark}[Reproduction and verification tier]
+Theorem~\ref{thm:s65} was reproduced four ways, all agreeing on $0$ Carmichael numbers:
+(i) the certificate \code{s65/s65\_exclusion.py} above; (ii) a separate native binary
+enumeration \code{s65/verify65.cpp} that checks all $22{,}287{,}138$ admissible $65$--products below
+$10^{148}$ without inverses or the progression shortcut; and (iii)--(iv) our preproduct search engine
+in both switch modes (\S\ref{sec:repro}), which independently reports $n=$ none with matching
+counts ($5012$ inversions, $66$ progression candidates). A companion certificate
+\code{s65/s65\_transfer\_certificate.py} establishes the weaker $S_{65}\ge 3.17\times10^{147}$ by
+extending the recorded $64$--products two independent ways ($285$ admissible $65$--products, $0$
+Carmichael). All rest on the same $A_{64}$, whose defining $127092$--product set and digest are the
+triple--verified core of \S\ref{sec:lower}. An upper bound for $S_{65}$ (Webster reports a
+$151$--digit candidate) is not independently verified here; confirming it would pin $S_{65}$ to
+$149$--$151$ digits.
 \end{remark}
 
 \section*{Acknowledgements}
