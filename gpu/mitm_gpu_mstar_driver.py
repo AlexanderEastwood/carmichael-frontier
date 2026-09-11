@@ -185,7 +185,10 @@ def run_instance(tag, B0, INS, r, hmax):
     for p in INS[-r:]: topI *= p
     ptb = 1
     for p in B0s[-r:]: ptb *= p
-    Icap = max(1, min(topI, (U * ptb) // P0 + 1)); pdm = 1
+    # Icap is EXCLUSIVE (the dumper emits prodI < Icap): floor(U*ptb/P0)+1 admits every prodI <= U*ptb/P0, and
+    # topI+1 keeps the largest insertion product itself. (Astra 2026-09-11: min(topI, ...) wrongly excluded topI
+    # when affordable -- radius-1 instances only; the 272 omitted completions were checked separately: no matches.)
+    Icap = max(1, min(topI + 1, (U * ptb) // P0 + 1)); pdm = 1
     for p in B0s[:r]: pdm *= p
     Imin = 1
     for p in INS[:r]: Imin *= p

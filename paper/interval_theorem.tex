@@ -34,7 +34,7 @@ exact endpoints, and quantify the improvement over the identified previous bound
 is made; the bounds stand on the computations. The sharpest cases are $k=64$ and $k=65$. For $k=64$ the
 upper bound is a $148$--digit Carmichael number $N$ with exactly $64$ prime factors found by
 J.~Webster (communicated September 11, 2026) and verified here, so $\Smin \le N$; our own
-$148$--digit incumbent $N_0$, found by a GPU exchange search, is $1.03\,N$ and is shown to be the
+$148$--digit incumbent $N_0$, found by a GPU exchange search, is approximately $1.03\,N$ and is shown to be the
 least $64$--factor Carmichael number whose Carmichael function divides $\lambda(N_0)$. For the lower bound we prove, by a finite
 exhaustion over a certified prime universe, that no $64$--factor Carmichael number is smaller than
 $10^{145}$. Together,
@@ -90,9 +90,9 @@ odd.
 \begin{proof}
 Since $q\mid n$ we have $(q-1)\mid(n-1)$, so $n\equiv 1\pmod{d}$ for every divisor $d$ of $q-1$. If
 $p\mid(q-1)$ then $n\equiv 1\pmod p$; but $p\mid n$ gives $n\equiv 0\pmod p$, forcing $p\mid 1$, a
-contradiction. Oddness: no even integer $>2$ is Carmichael, since for an odd prime factor $p$ the
-even number $p-1$ cannot divide the (then even) $n-1$ consistently with squarefreeness; concretely
-$2$ cannot be one of $k\ge 3$ distinct prime factors of a Carmichael number.
+contradiction. Oddness: if $n$ were even then $n-1$ would be odd, so for any odd prime factor $p$
+the even number $p-1$ could not divide $n-1$; hence a Carmichael number with $k\ge3$ distinct prime
+factors has no factor $2$ and is odd.
 \end{proof}
 
 \section{Upper bound}\label{sec:upper}
@@ -122,7 +122,7 @@ reproduced here after independent factorisation and verification. It is an upper
 minimal. Our own best incumbent, found by the GPU exchange search of \S\ref{sec:exchange} at radius
 $r=8$ and modulus $M_0=1768248177696000$, is the $148$--digit number
 \[
-  N_0 \;=\; N \cdot 1.0295\ldots,\qquad \lambda(N_0)=M_0,\quad \Pp(N_0)=1249,
+  N_0 \;\approx\; 1.0295\,N \quad (N_0/N=1.029452793\ldots),\qquad \lambda(N_0)=M_0,\quad \Pp(N_0)=1249,
 \]
 whose $64$ factors are listed in the repository file\\
 \code{results\_k64\_best\_global\_prev\_148\_539839443357.json};
@@ -136,37 +136,45 @@ lengths; it is not an appeal to any general monotonicity of $S_k$.
 
 \subsection{The exchange search and a restricted minimum}\label{sec:exchange}
 
-Fix a modulus $M$ and let $Q(M)=\{q \text{ prime}: (q-1)\mid M,\ q\nmid M\}$. If $n$ is squarefree
-with every prime factor in $Q(M)$ and $n\equiv 1\pmod M$, then $(q-1)\mid M\mid(n-1)$ for every
-$q\mid n$, so $n$ is Carmichael by Korselt; conversely every Carmichael number $n$ with
-$\lambda(n)\mid M$ arises this way, since $q\nmid\lambda(n)$ for every prime factor $q$ of a
-Carmichael number (Lemma~\ref{lem:adm}) and $n\equiv1\pmod{\lambda(n)}$.
+Fix a modulus $M$ and let $Q(M)=\{q \text{ prime}: (q-1)\mid M,\ q\nmid M\}$. If $n$ is composite and
+squarefree with every prime factor in $Q(M)$ and $n\equiv 1\pmod M$, then $(q-1)\mid M\mid(n-1)$ for
+every $q\mid n$, so $n$ is Carmichael by Korselt. The converse holds only for the exact modulus: every
+Carmichael number $n$ with $\lambda(n)=D$ has all its prime factors in $Q(D)$ (a prime factor $q$ of a
+Carmichael number never divides $\lambda(n)$, by Lemma~\ref{lem:adm}) and satisfies $n\equiv1\pmod D$.
+Consequently searching every divisor $D$ of $M$ covers every Carmichael number with $\lambda(n)\mid M$,
+whereas a search at $M$ alone does not (for instance $\lambda(561)=80\mid160$ but $561\not\equiv1\pmod{160}$).
 
 \paragraph{Exchange meet--in--the--middle.}
 Choose a base $B_0\subset Q(M)$ of $64$ primes with product $P_B$, and a radius $r$. A
 \emph{radius-$r$ exchange} replaces $D\subset B_0$ by $I\subset Q(M)\setminus B_0$ with $|D|=|I|=r$,
 giving $n=P_B\,P_I/P_D$ where $P_I=\prod I$, $P_D=\prod D$. The condition $n\equiv1\pmod M$ reads
 $P_B P_I\equiv P_D\pmod M$, so the search is a join of the multiset $\{P_D \bmod M\}$ over deletions
-with $\{P_B P_I\bmod M\}$ over insertions; both sides are generated, sorted and joined on a GPU,
-and every match is re-verified with exact integers and the reference oracle. An \emph{improving}
-completion is one with $n<U$ for the current bound $U$.
+with $\{P_B P_I\bmod M\}$ over insertions. In the implementation the deletion side is generated on the
+CPU (with the product filter below) and held resident on the GPU, the insertion side is streamed from
+a CPU generator and sorted and joined on the GPU (very small instances, and the $134$--bit case at
+radius $14$, are joined on the host with exact integers); every residue match is checked with exact
+integer arithmetic, and every candidate below the bound is verified by the reference oracle. An
+\emph{improving} completion is one with $n<U$ for the current bound $U$.
 
 \begin{lemma}[Product bounds]\label{lem:prod}
-Let $D_{\max,r}$ be the product of the $r$ largest primes of $B_0$ and $I_{\min,r}$ the product of the
-$r$ smallest primes of $Q(M)\setminus B_0$. Every improving radius-$r$ completion satisfies
+Let $U$ be a positive integer bound, $r\ge1$, let $D_{\max,r}$ be the product of the $r$ largest primes
+of $B_0$ and $I_{\min,r}$ the product of the $r$ smallest primes of $Q(M)\setminus B_0$ (empty products
+are $1$). Every improving radius-$r$ completion satisfies
 \[
-  P_I \;<\; I_{\mathrm{cap}}:=\frac{U\,D_{\max,r}}{P_B}
+  P_I \;<\; I_{\mathrm{cap}}:=\Big\lfloor\frac{U\,D_{\max,r}}{P_B}\Big\rfloor+1
   \qquad\text{and}\qquad
-  P_D \;\ge\; D_{\min}:=\Big\lfloor \frac{P_B\,I_{\min,r}}{U}\Big\rfloor+1 .
+  P_D \;\ge\; D_{\min}:=\Big\lfloor \frac{P_B\,I_{\min,r}}{U}\Big\rfloor+1 ,
 \]
-Moreover the largest prime of $I$ is at most $(I_{\mathrm{cap}}-1)/I_{\min,r-1}$, and if the insertion
-primes are split at a threshold $y$ into $a_1<a_2<\cdots\le y<c_1<c_2<\cdots$, a completion using
-exactly $h$ primes above $y$ satisfies $n\ge (P_B/D_{\max,r})\prod_{j\le r-h}a_j\prod_{j\le h}c_j$.
+the largest prime of $I$ is at most $\lfloor (I_{\mathrm{cap}}-1)/I_{\min,r-1}\rfloor$, and if the
+insertion primes are split at a threshold $y$ into $a_1<a_2<\cdots\le y<c_1<c_2<\cdots$, a completion
+using exactly $h$ primes above $y$ satisfies $n\ge (P_B/D_{\max,r})\prod_{j\le r-h}a_j\prod_{j\le h}c_j$.
 \end{lemma}
 \begin{proof}
-$n<U$ with $P_D\le D_{\max,r}$ gives $P_I<U D_{\max,r}/P_B$; with $P_I\ge I_{\min,r}$ it gives
-$P_D>P_B I_{\min,r}/U$. The remaining two statements bound $P_I$ from below by the product of the
-$r-1$ smallest insertion primes times the largest one, respectively by the stratified minimum.
+$n<U$ with $P_D\le D_{\max,r}$ gives $P_I<U D_{\max,r}/P_B$, hence $P_I\le\lfloor U D_{\max,r}/P_B\rfloor$;
+with $P_I\ge I_{\min,r}$ it gives $P_D>P_B I_{\min,r}/U$. The largest prime of $I$ times the product of
+the other $r-1$ insertion primes, which is at least $I_{\min,r-1}$, is $P_I\le I_{\mathrm{cap}}-1$; the
+stratified bound is the stratified minimum of $P_I$. (A completion admitted by the integer rounding but
+not improving is discarded by the final test $n<U$.)
 \end{proof}
 
 The second bound is what makes large radii affordable: at $r=9$ for $N_0$ it keeps $40\,966\,814$ of
@@ -176,17 +184,20 @@ while the insertion side is streamed through it.
 \begin{lemma}[Per--modulus exactness]\label{lem:exact}
 Let $D\mid M$ with $|Q(D)|\ge 64$, let $B_0(D)$ be the $64$ smallest primes of $Q(D)$, $T_{64}$ their
 product and $T_{63}=T_{64}/\max B_0(D)$, and suppose $T_{64}<U$. Let $S\subset Q(D)$ be any $64$-subset
-with $\prod S<U$. Then every prime of $S$ is at most $(U-1)/T_{63}$, and $|S\setminus B_0(D)|\le
-r_{\max}(D)$, where $r_{\max}(D)$ is the largest $r$ for which $L_r:=T_{64}\prod_{j\le r}a_j/\prod_{j\le r}b_j<U$,
-with $a_1<a_2<\cdots$ the primes of $Q(D)\setminus B_0(D)$ and $b_1>b_2>\cdots$ the primes of $B_0(D)$
-in decreasing order. In particular the exchange search from $B_0(D)$ at radii $0,\dots,r_{\max}(D)$
+with $\prod S<U$. Then every prime of $S$ is at most $\lfloor (U-1)/T_{63}\rfloor$, and
+$|S\setminus B_0(D)|\le r_{\max}(D)$, where, with $a_1<a_2<\cdots$ the primes of $Q(D)\setminus B_0(D)$,
+$b_1>b_2>\cdots>b_{64}$ the primes of $B_0(D)$ in decreasing order, $L_0:=T_{64}$ and
+$L_r:=T_{64}\prod_{j\le r}a_j/\prod_{j\le r}b_j$ for $1\le r\le\min(64,|Q(D)|-64)$, the radius
+$r_{\max}(D)$ is the largest $r$ in that range with $L_r<U$ (so $r_{\max}(D)\ge0$ since $L_0=T_{64}<U$). In particular the exchange search from $B_0(D)$ at radii $0,\dots,r_{\max}(D)$
 over the pool $\{q\in Q(D): q\le (U-1)/T_{63}\}$ finds every Carmichael number $n<U$ with
 $\omega(n)=64$ and $\lambda(n)=D$.
 \end{lemma}
 \begin{proof}
-The $63$ smallest elements of $S$ multiply to at least $T_{63}$, which bounds the largest. If
-$|S\setminus B_0(D)|=r$ then $\prod S\ge L_r$, and $L_{r+1}/L_r=a_{r+1}/b_{64-r}>1$ because every
-prime outside $B_0(D)$ exceeds every prime inside; hence $r>r_{\max}(D)$ forces $\prod S\ge L_r\ge
+The $63$ smallest elements of $S$ multiply to at least $T_{63}$, which bounds the largest by
+$(U-1)/T_{63}$. If $|S\setminus B_0(D)|=r$ then $r\le\min(64,|Q(D)|-64)$ and $\prod S\ge L_r$, because the
+$r$ primes outside are at least $a_1,\dots,a_r$ and the $64-r$ primes inside are at least the
+$64-r$ smallest of $B_0(D)$; and whenever $r+1$ is in range, $L_{r+1}/L_r=a_{r+1}/b_{r+1}>1$ because every
+prime outside $B_0(D)$ exceeds every prime inside. Hence $r>r_{\max}(D)$ forces $\prod S\ge L_r\ge
 L_{r_{\max}(D)+1}\ge U$. The last sentence follows from the first paragraph of this subsection.
 \end{proof}
 
@@ -219,11 +230,33 @@ $118$ base checks, none incomplete) with no completion below $N$. Hence:
 \begin{theorem}[A restricted minimum for $N$]\label{thm:restrictedN}
 $N$ is the least Carmichael number with exactly $64$ prime factors whose Carmichael function divides
 $\lambda(N)$; every $64$--factor Carmichael number below $N$ has a prime factor $q$ with
-$(q-1)\nmid\lambda(N)$ and a prime factor $q'$ with $(q'-1)\nmid M_0$.
+$(q-1)\nmid\lambda(N)$ and a prime factor $q'$, not necessarily distinct from $q$, with $(q'-1)\nmid M_0$
+(the latter by Theorem~\ref{thm:restricted}, since $n<N<N_0$).
 \end{theorem}
 
 Both restricted minima are statements about a divisor family, not about $\Smin$. The census script
-(\code{gpu/divisor\_family\_census.py}) is standard--library Python and independent of the GPU code.
+(\code{gpu/divisor\_family\_census.py}) is standard--library Python and independent of the GPU code;
+it discards a divisor with fewer than $64$ eligible primes below its sieve bound only after checking
+that no completion with primes beyond the bound could be below $U$.
+
+\paragraph{Records and reproduction.}
+An implementation error found in review (the insertion cap excluded the single largest affordable
+insertion product, which can only matter at radius~$1$) was corrected and the radius-$1$ coverage of
+both families regenerated at the frozen bounds $N_0$ and $N$; the $272$ previously omitted
+completions were also checked directly, with no residue match. The per--modulus records are the
+files \code{gpu/run\_fam\_D<D>.log} (full radii) and \code{gpu/run\_fam\_D<D>\_r1fix.log} (regenerated
+radius~$1$) in the repository's run directory; the census tables are
+\code{gpu/mstar\_divisor\_family.json} and \code{gpu/divisor\_family\_lambdaJ.json}. To reproduce the
+census and, on a CUDA host with the two dumpers built, the search (add \code{U\_OVERRIDE=<bound>} to
+freeze the bound):\\
+{\small\code{python3 gpu/divisor\_family\_census.py <incumbent.json>}}\\
+{\small\code{FAMILY\_JSON=<census.json> S\_MAX\_SKIP=-1 python3 gpu/run\_mstar\_family.py}}\\
+The pipeline's positive control, which rediscovers $N_0$ from the $64$ smallest primes of $Q(M_0)$ at
+radius~$8$, is\\
+{\small\code{U\_OVERRIDE=<previous incumbent> DFILTER=1 R\_MIN=8 R\_MAX=8 BASES=ksmall}}\\
+{\small\code{\ \ INS\_PRIME\_CAP=4000 python3 gpu/mitm\_gpu\_mstar\_driver.py}}\\
+The census tables establish the task universe; the run records, not the tables, certify the negative
+results.
 
 \paragraph{What the two incumbents show.}
 Theorems~\ref{thm:restricted} and~\ref{thm:restrictedN} make precise where a fixed--modulus
@@ -378,9 +411,11 @@ The cofactor machinery transfers to $k=65$ with no new exhaustion. Let
   A_{64}\;=\;\min\{\,\textstyle\prod_{i=1}^{64}p_i : p_1<\dots<p_{64}\text{ odd primes, pairwise admissible}\,\}
 \]
 be the least product of $64$ pairwise--admissible odd primes. The enumeration of \S\ref{sec:lower}
-records it as a by--product: it is the minimum over the $127092$ admissible $64$--products below
-$10^{145}$ (that this global minimum lies below $10^{145}$ is witnessed by those products), namely the
-explicit $145$--digit integer
+records it as a by--product: the proof of Lemma~\ref{lem:C} never uses that the cofactor belongs to a
+Carmichael number, so it bounds every pairwise--admissible $63$--product by $C$; hence every admissible
+$64$--product below $10^{145}$ has all its primes $\le5518$ and is among the $127092$ enumerated
+products, and the minimum over the enumeration is the global $A_{64}$ (that this minimum lies below
+$10^{145}$ is witnessed by those products). It is the explicit $145$--digit integer
 \[
   \begin{aligned}
   A_{64} \;=\;{}& 441172365445881169056428109132100061485293342\\
@@ -457,7 +492,7 @@ and
 \]
 
 \begin{theorem}[Ladder]\label{thm:ladder}
-For every $m$, $C_m(y)\le A_m\le S_m$. Hence, for each $k$ with a verified incumbent $U_k$,
+For every $m\ge3$ (so that $S_m$ exists), $C_m(y)\le A_m\le S_m$. Hence, for each $k$ with a verified incumbent $U_k$,
 $C_k(y)\le S_k\le U_k$.
 \end{theorem}
 
@@ -482,8 +517,9 @@ All $C_m(97)$ for $63\le m\le144$ were obtained in one shared pass over the $407
 $\mathcal H_{97}$ (tail primes $\le10^4$, the largest actually needed being $3209$; exact integer
 arithmetic, $\approx10$\,s). $C_{63}(97)$ reproduces the constant of Lemma~\ref{lem:C}, and
 $C_{64},C_{100},C_{137},C_{144}$ agree with an independent computation. The upper bounds $U_k$ are
-verified $k$--factor Carmichael numbers from our search ($U_{65}$ is Webster's candidate, verified in
-\S\ref{sec:s65}); each is re--checked by the frozen oracle. Table~\ref{tab:ladder} lists the resulting
+verified $k$--factor Carmichael numbers: $U_{64}=N$ and $U_{65}$ are Webster's (\S\ref{sec:upper},
+\S\ref{sec:s65}), the rows $k=66,\dots,144$ come from our search; each is re--checked by the frozen
+oracle. Table~\ref{tab:ladder} lists the resulting
 digit intervals; the rows $k=64,65$ carry the stronger completed--exclusion endpoints of
 \S\ref{sec:lower}--\S\ref{sec:s65}. The elementary primorial baseline is shown for comparison; the
 relaxed bound improves it by $16$--$29$ digits across the ladder (column ``gain''). This is the

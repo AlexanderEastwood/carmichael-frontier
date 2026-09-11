@@ -47,7 +47,15 @@ def census(U, M, U_factors):
     fm = factor(M); rows = []
     for D in divisors(fm):
         P = pool(D)
-        if len(P) < 64: continue
+        if len(P) < 64:
+            # finite-sieve completeness guard (Astra 2026-09-11): the class may only be discarded if no completion
+            # using primes beyond the sieve could be < U; every omitted prime is > SIEVE_BOUND, so the product of the
+            # s known primes times (SIEVE_BOUND+1)^(64-s) is a lower bound on any 64-product from Q(D).
+            lb = 1
+            for p in P: lb *= p
+            lb *= (SIEVE_BOUND + 1) ** (64 - len(P))
+            assert lb >= U, f"D={D}: only {len(P)} eligible primes below the sieve bound and the completion bound {len(str(lb))} digits < U; raise SIEVE_BOUND"
+            continue
         T64 = 1
         for p in P[:64]: T64 *= p
         if T64 >= U: continue

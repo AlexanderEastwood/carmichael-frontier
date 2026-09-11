@@ -40,10 +40,11 @@ def main() -> None:
         if rmax == 0: log(f"D={D} s={row['s']} pool={len(P)} rmax=0: base checked, nothing else affordable"); continue
         ck = os.path.join(HERE, "checkpoint_mstar_fam.json")
         if os.path.exists(ck): os.remove(ck)
-        env = dict(os.environ, MODULUS=str(D), DFILTER="1", CKPT_TAG="fam", R_MIN="1", R_MAX=str(rmax), BASES="ksmall",
+        rhi = min(rmax, int(os.environ.get("FAM_R_MAX", "99")))          # FAM_R_MAX=1: regenerate only radius-1 coverage
+        env = dict(os.environ, MODULUS=str(D), DFILTER="1", CKPT_TAG="fam", R_MIN=os.environ.get("FAM_R_MIN", "1"), R_MAX=str(rhi), BASES="ksmall",
                    INS_PRIME_CAP=str(cap + 1), INS_MAX=os.environ.get("FAM_INS_MAX", "1024"), SPLIT="4000", IDUMP_T="8",
                    IDUMP_TIMEOUT=os.environ.get("FAM_IDUMP_TIMEOUT", "1800"), WALL_CAP=os.environ.get("FAM_WALL_CAP", "1500"))
-        t = time.time(); lf = os.path.join(HERE, f"run_fam_D{D}.log")
+        t = time.time(); lf = os.path.join(HERE, f"run_fam_D{D}{os.environ.get('FAM_LOG_SUFFIX', '')}.log")
         with open(lf, "w") as out: rc = subprocess.call([PY, "-u", DRIVER], stdout=out, stderr=subprocess.STDOUT, env=env, stdin=subprocess.DEVNULL)
         txt = open(lf).read(); inst = txt.count("dfilter"); skipped = txt.count("no stratum"); inc_ = txt.count("INCOMPLETE")
         log(f"D={D} s={row['s']} pool={len(P)} |INS|={len(P)-64} rmax={rmax} rc={rc} {time.time()-t:.0f}s instances={inst} bound-skipped={skipped} incomplete={inc_} complete={'DONE complete' in txt}")
