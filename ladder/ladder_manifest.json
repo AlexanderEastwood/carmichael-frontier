@@ -1,10 +1,10 @@
 {
- "generated": "2026-09-11T06:57:12Z",
+ "generated": "2026-09-11T07:43:25Z",
  "y": 97,
  "tail_limit": 10000,
  "head_classes": 407760,
  "max_tail_prime_used": 3209,
- "relaxed_pass_seconds": 10.57,
+ "relaxed_pass_seconds": 11.27,
  "C63_check": "OK",
  "exclusions": {
   "64": "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
@@ -22,7 +22,7 @@
    "U_k_digits": 148,
    "U_k_oracle_ok": true,
    "U_k_product_eq_n": true,
-   "U_k_largest_prime": 3697,
+   "U_k_largest_prime": 1249,
    "U_k_source": "results_k64_best_global.json",
    "interval_digits": [
     147,

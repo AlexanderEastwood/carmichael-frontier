@@ -29,10 +29,11 @@ authoritative reference for the known values and the neighbours cited below.
 ## The k = 64 interval
 
 **Upper bound — a 148-digit incumbent** (improves the earlier 149-digit candidate), the product of
-64 distinct primes (largest **3697**):
+64 distinct primes (largest **1249**; found by the GPU exchange search at r=8, improving the
+previous 148-digit incumbent by a factor of 1.605):
 
 ```
-19·29·31·37·41·43·47·53·61·67·71·73·79·89·97·101·103·109·113·127·131·137·139·151·157·163·167·181·193·197·199·211·239·241·251·257·271·277·281·307·313·331·337·353·379·397·401·421·433·449·461·463·491·541·547·577·599·631·673·811·829·883·1951·3697
+19·29·31·37·41·43·47·53·61·67·71·73·79·89·97·101·103·109·113·127·131·137·139·151·157·163·167·181·193·197·199·211·239·241·251·257·271·281·307·313·331·337·353·379·397·401·409·421·433·461·487·541·547·577·601·613·617·673·751·769·859·967·1051·1249
 ```
 
 - Value + metadata in [`results_k64_best_global.json`](results_k64_best_global.json)

@@ -2,11 +2,11 @@
 
 Certified lower and upper bounds C_k(97) ≤ A_k ≤ S_k ≤ U_k with exact endpoints (see `ladder_manifest.json`) and the quantified gain over the identified previous bound (the elementary primorial baseline). No priority is claimed; the bounds stand on the computations.
 
-Certified relaxed lower bound C_k(97) from one shared pass over 407,760 head classes (y=97, tail primes ≤ 10,000, largest tail prime used 3209), 10.8 s; C_63 reproduces the known 142-digit constant. Every U_k re-verified by the frozen oracle. Stronger rows use a **completed** Carmichael exclusion. Admissible (C/A) and Carmichael (S) bounds are never conflated.
+Certified relaxed lower bound C_k(97) from one shared pass over 407,760 head classes (y=97, tail primes ≤ 10,000, largest tail prime used 3209), 11.3 s; C_63 reproduces the known 142-digit constant. Every U_k re-verified by the frozen oracle. Stronger rows use a **completed** Carmichael exclusion. Admissible (C/A) and Carmichael (S) bounds are never conflated.
 
 | k | primorial digits | C_k(97) digits | gain | lower bound used | S_k digits ∈ | U_k digits | U_k largest p | U_k oracle |
 |--:|--:|--:|--:|:--|:--:|--:|--:|:--:|
-| 64 | 128 | 144 | +16 | none ≤ 10^146 | **[147, 148]** | 148 | 3697 | ✓ |
+| 64 | 128 | 144 | +16 | none ≤ 10^146 | **[147, 148]** | 148 | 1249 | ✓ |
 | 65 | 130 | 147 | +17 | none < 10^148 | **[149, 151]** | 151 | 1993 | ✓ |
 | 66 | 133 | 150 | +17 | C_66(97) | **[150, 154]** | 154 | 3221 | ✓ |
 | 67 | 136 | 153 | +17 | C_67(97) | **[153, 158]** | 158 | 2311 | ✓ |

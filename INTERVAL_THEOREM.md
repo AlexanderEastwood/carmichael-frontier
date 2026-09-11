@@ -18,20 +18,23 @@ Everything below is at repository revision `f872e32`.
 
 ## Upper bound — a 148-digit incumbent (improves the earlier 149-digit candidate)
 
-`N` is the product of these 64 distinct primes (largest is **3697**):
+`N` is the product of these 64 distinct primes (largest is **1249**):
 
 ```
-19·29·31·37·41·43·47·53·61·67·71·73·79·89·97·101·103·109·113·127·131·137·139·151·157·163·167·181·193·197·199·211·239·241·251·257·271·277·281·307·313·331·337·353·379·397·401·421·433·449·461·463·491·541·547·577·599·631·673·811·829·883·1951·3697
+19·29·31·37·41·43·47·53·61·67·71·73·79·89·97·101·103·109·113·127·131·137·139·151·157·163·167·181·193·197·199·211·239·241·251·257·271·281·307·313·331·337·353·379·397·401·409·421·433·461·487·541·547·577·601·613·617·673·751·769·859·967·1051·1249
 ```
 
 - **Re-derive `N` by multiplying the factor list** — don't trust a pasted decimal. Value + metadata
   in [`results_k64_best_global.json`](results_k64_best_global.json).
-- **Verification.** Every factor is `≤ 3697`, so its primality is certified by exact trial division
+- **Verification.** Every factor is `≤ 1249`, so its primality is certified by exact trial division
   (deterministic at this size). Squarefree, 64 distinct primes, and Korselt `(p−1)|(N−1)` for every
-  `p` — equivalently `λ(N) = lcm(p−1) = 589416059232000` and `N ≡ 1 (mod λ(N))`. `10^147 ≤ N < 10^148`.
+  `p` — equivalently `λ(N) = lcm(p−1) = 1768248177696000` and `N ≡ 1 (mod λ(N))`. `10^147 ≤ N < 10^148`.
   Checked by `ref/ref_carmichael.py::verify_certificate` (shares no code with the search).
-- **Found** by exchange meet-in-the-middle at modulus `M = 3·λ(N) = 1768248177696000` (so `N ≡ 1
-  mod M`; `M` is the *search modulus*, not `λ(N)`). An **upper bound**, not a certified minimum.
+- **Found** by the GPU exchange meet-in-the-middle at radius **r=8** (`gpu/mitm_gpu_r8_driver.py`; the
+  CPU engine is limited to r≤7) at search modulus `M = 1768248177696000` — for this `N`, `M = λ(N)`
+  and `N ≡ 1 mod M`. Improves the previous 148-digit incumbent (largest prime 3697, r=7, kept as
+  `results_k64_best_global_prev_148_N.json`) by a factor of **1.605**. An **upper bound**, not a
+  certified minimum.
 - Consistent with the neighbours *by digit length + the proved interval*, not by any general
   monotonicity of `Sₖ`: Webster's `N₆₃` has 145 digits (so `N₆₃ < 10^145 ≤ S₆₄`) and the `N₆₅`
   candidate has 151 digits (so it exceeds `N`). The original 149-digit candidate is in

@@ -64,7 +64,7 @@ cited below), and $S_{64}$ is open as of September~2026. This note proves:
 \begin{theorem}[Interval]\label{thm:interval}
 $10^{145}\le \Smin \le N$, where
 \[
-  N \;=\; 8664205557705627135892897321176984054850894080429746661350141011836598584916617361518185311595941924456408326192593430956147737016566872025613568001
+  N \;=\; 5398394433579412578789368808896977180102914678583162364265665526662542455879450199776761404243377890826974683834415382639333289438994650130663712001
 \]
 is a $148$--digit Carmichael number with exactly $64$ prime factors. Consequently $\Smin$ has
 $146$, $147$, or $148$ decimal digits, and the remaining exclusion interval for $\Smin$ is
@@ -93,15 +93,15 @@ The number $N$ of Theorem~\ref{thm:interval} is the product of the $64$ primes
 \[
 \begin{aligned}
 &19,\,29,\,31,\,37,\,41,\,43,\,47,\,53,\,61,\,67,\,71,\,73,\,79,\,89,\,97,\,101,\,103,\,109,\,113,\,127,\\
-&131,\,137,\,139,\,151,\,157,\,163,\,167,\,181,\,193,\,197,\,199,\,211,\,239,\,241,\,251,\,257,\,271,\,277,\,281,\,307,\\
-&313,\,331,\,337,\,353,\,379,\,397,\,401,\,421,\,433,\,449,\,461,\,463,\,491,\,541,\,547,\,577,\,599,\,631,\,673,\,811,\\
-&829,\,883,\,1951,\,3697.
+&131,\,137,\,139,\,151,\,157,\,163,\,167,\,181,\,193,\,197,\,199,\,211,\,239,\,241,\,251,\,257,\,271,\,281,\,307,\,313,\\
+&331,\,337,\,353,\,379,\,397,\,401,\,409,\,421,\,433,\,461,\,487,\,541,\,547,\,577,\,601,\,613,\,617,\,673,\,751,\,769,\\
+&859,\,967,\,1051,\,1249.
 \end{aligned}
 \]
 These are $64$ distinct primes; re-derive $N$ by multiplying the list rather than trusting the
-printed decimal. Each factor is at most $3697$, so its primality is certified by exact trial
+printed decimal. Each factor is at most $1249$, so its primality is certified by exact trial
 division (a deterministic check at this size). One verifies directly that $(p-1)\mid(N-1)$ for every
-$p$; equivalently, writing $\lambda(N)=\operatorname{lcm}_{p\mid N}(p-1)=589416059232000$, one has
+$p$; equivalently, writing $\lambda(N)=\operatorname{lcm}_{p\mid N}(p-1)=1768248177696000$, one has
 $N\equiv 1\pmod{\lambda(N)}$. Hence $N$ is a squarefree Carmichael number with $\omega(N)=64$, and
 $\Smin\le N$. Since $10^{147}\le N<10^{148}$, the number $N$ has $148$ digits. The certificate is
 verified by \code{ref/ref\_carmichael.py::verify\_certificate}, an independent, dependency--free
@@ -109,9 +109,12 @@ routine (squarefreeness, distinctness, per--factor primality, and Korselt) shari
 search that produced $N$.
 
 \begin{remark}
-$N$ was found by an exchange meet--in--the--middle search at modulus $M=3\,\lambda(N)=1768248177696000$
-(so $N\equiv 1\pmod M$; $M$ is the search modulus, \emph{not} $\lambda(N)$ itself). It is an
-incumbent, not claimed minimal, and improves a previously reported $149$--digit candidate. Its
+$N$ was found by an exchange meet--in--the--middle search at exchange radius $r=8$ with the D side
+generated and joined on a GPU (the CPU engine is limited to $r\le 7$), at search modulus
+$M=1768248177696000$; for this $N$ the modulus coincides with $\lambda(N)$ and $N\equiv 1\pmod M$.
+It is an incumbent, not claimed minimal. It improves the previous $148$--digit incumbent by a factor
+of $1.605$ (that number, with largest prime $3697$, was itself found at $r=7$ on the same modulus and
+is retained in the repository) and an earlier $149$--digit candidate. Its
 $148$ digits are consistent with the known neighbours only in the following precise sense: Webster's
 $N_{63}$ has $145$ digits, hence $N_{63}<10^{145}\le\Smin$, and the $N_{65}$ candidate has $151$
 digits, hence exceeds $N$. This uses the proved interval and the stated digit lengths; it is not an
