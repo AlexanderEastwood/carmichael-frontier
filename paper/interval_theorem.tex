@@ -64,7 +64,12 @@ cited below), and $S_{64}$ is open as of September~2026. This note proves:
 \begin{theorem}[Interval]\label{thm:interval}
 $10^{145}\le \Smin \le N$, where
 \[
-  N \;=\; 5398394433579412578789368808896977180102914678583162364265665526662542455879450199776761404243377890826974683834415382639333289438994650130663712001
+  \begin{aligned}
+  N \;=\;{}& 539839443357941257878936880889697718010291467\\
+  &858316236426566552666254245587945019977676140\\
+  &424337789082697468383441538263933328943899465\\
+  &0130663712001 .
+\end{aligned}
 \]
 is a $148$--digit Carmichael number with exactly $64$ prime factors. Consequently $\Smin$ has
 $146$, $147$, or $148$ decimal digits, and the remaining exclusion interval for $\Smin$ is
@@ -149,7 +154,12 @@ Fix $Y=10^{145}$. We show no $64$--factor Carmichael number lies below $Y$.
 \begin{lemma}[Cofactor lower bound]\label{lem:C}
 There is an explicit constant
 \[
-  C \;=\; 1812140595092971804464959059612576188399713525008997620073689836850955613086867158799858934921557347504370550240044086773665823716701403213549
+  \begin{aligned}
+  C \;=\;{}& 181214059509297180446495905961257618839971352\\
+  &500899762007368983685095561308686715879985893\\
+  &492155734750437055024004408677366582371670140\\
+  &3213549 .
+\end{aligned}
 \]
 (a $142$--digit integer) such that for every Carmichael number $n$ with $\omega(n)=64$ and every
 prime factor $q\mid n$, the product of the remaining $63$ factors satisfies $n/q\ge C$.
@@ -239,9 +249,10 @@ its own arithmetic, again finding $0$ Carmichael. It was validated against the o
 \code{least\_with\_k} on small $k$: $k=3\!\to\!561$, $k=4\!\to\!41041$, $k=5\!\to\!825265$.
 \end{enumerate}
 
-\noindent Exact commands: \code{python3 s64\_lower\_bound\_certificate.py};
-\code{python3 carmichael\_prime\_bound.py -{}-X 1e145 -{}-pi};
-\code{python3 s64\_lower\_bound\_oracle\_check.py}.
+\noindent Exact commands:\\
+\code{python3 s64\_lower\_bound\_certificate.py}\\
+\code{python3 carmichael\_prime\_bound.py -{}-X 1e145 -{}-pi}\\
+\code{python3 s64\_lower\_bound\_oracle\_check.py}
 
 \section{The interval}
 
@@ -277,7 +288,12 @@ records it as a by--product: it is the minimum over the $127092$ admissible $64$
 $10^{145}$ (that this global minimum lies below $10^{145}$ is witnessed by those products), namely the
 explicit $145$--digit integer
 \[
-  A_{64}=4411723654458811690564281091321000614852933427803594841106730678799037685864777959408045502066896318764081869632059317133390275833282396201943377 .
+  \begin{aligned}
+  A_{64} \;=\;{}& 441172365445881169056428109132100061485293342\\
+  &780359484110673067879903768586477795940804550\\
+  &206689631876408186963205931713339027583328239\\
+  &6201943377 .
+\end{aligned}
 \]
 
 \begin{lemma}[Cofactor transfer]\label{lem:transfer}
@@ -340,7 +356,9 @@ element of $S$. Define
 \[
   C_m(y)\;=\;\min_{\substack{S\in\mathcal H_y\\ |S|\le m}}
   \Big(\prod_{p\in S}p\Big)\prod_{i=1}^{m-|S|} b_i(S),
-  \qquad
+\]
+and
+\[
   A_m\;=\;\min\Big\{\prod_{i=1}^{m}p_i : p_1<\dots<p_m\text{ odd, pairwise admissible}\Big\}.
 \]
 
@@ -399,13 +417,14 @@ $3\le k\le 19{,}565{,}220$; Larsen and Wright proved that Carmichael numbers exi
 sufficiently large factor count. Neither determines a minimum; the contribution reported here is an
 explicit interval for the minimum $S_{64}$.
 
+{\emergencystretch=2.5em
 AI assistance (OpenAI GPT--6, the model designation recorded for the working session) contributed
 the lower--bound argument, generated the initial certificate code
-(\code{s64\_lower\_bound\_certificate.py}), and executed the first computation. Independently of that
-script, the author recomputed the cofactor bound $C$ (\code{carmichael\_prime\_bound.py}) and wrote
-a separate oracle--gated enumerator (\code{s64\_lower\_bound\_oracle\_check.py}); rerunning the
+(\code{s64\_\allowbreak lower\_\allowbreak bound\_\allowbreak certificate.py}), and executed the first computation. Independently of that
+script, the author recomputed the cofactor bound $C$ (\code{carmichael\_\allowbreak prime\_\allowbreak bound.py}) and wrote
+a separate oracle--gated enumerator (\code{s64\_\allowbreak lower\_\allowbreak bound\_\allowbreak oracle\_\allowbreak check.py}); rerunning the
 supplied certificate is not counted as a separately implemented proof. The author retains
 responsibility for the mathematics and the code, and treats the model as an assistant rather than a
-mathematical authority.
+mathematical authority.\par}
 
 \end{document}
