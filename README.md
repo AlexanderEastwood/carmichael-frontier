@@ -5,34 +5,44 @@ Carmichael number with exactly _k_ prime factors** ([OEIS A006931](https://oeis.
 built to help push the frontier past the current record — and used here to find a **verified
 64-factor Carmichael number**.
 
-> **Result (2026-09-10):** a genuine Carmichael number with **exactly 64 distinct prime
-> factors**, 149 decimal digits — a strong _candidate_ for S₆₄ (an upper bound), **not** a
-> certified minimum. Independently re-verified by a frozen reference oracle that shares no code
-> with the search engine. See [`RESULTS_k64.md`](RESULTS_k64.md).
+> **Result (updated 2026-09-11):** an explicit interval for S₆₄,
+> $$10^{145} \le S_{64} \le N < 10^{148},$$
+> where `N` is an oracle-verified **148-digit** Carmichael number with exactly 64 prime factors.
+> So **S₆₄ has 146, 147, or 148 digits.** The lower bound is a finite exhaustion (127,092
+> admissible products below 10¹⁴⁵, zero Carmichael), reproduced three independent ways. This is a
+> global bound on the minimum — **not** a determination of it. Full write-up:
+> [`INTERVAL_THEOREM.md`](INTERVAL_THEOREM.md) and [`paper/interval_theorem.tex`](paper/interval_theorem.tex).
 
 Everything here is our own code, developed beside — not committed to — Jonathan Webster's
 [`small-carmichael-numbers`](https://github.com/jewebste/small-carmichael-numbers), whose
 published table (k = 3–63, and a k = 65 candidate; k = 36–63 from Butler University) is the
 authoritative reference for the known values and the neighbours cited below.
 
-## The k = 64 candidate
+## The k = 64 interval
 
-- **64 distinct prime factors** (19 … 1933):
-  `19·29·31·37·41·43·47·53·61·67·71·73·79·89·97·101·103·109·113·127·131·137·139·151·157·163·167·181·193·197·199·211·239·241·257·271·277·281·307·313·331·337·379·397·409·421·443·461·463·487·491·499·521·599·617·641·673·691·701·769·859·1151·1321·1933`
-- **149 digits.** The exact decimal and the full write-up are in [`results_k64.json`](results_k64.json)
-  and [`RESULTS_k64.md`](RESULTS_k64.md). Re-derive the value yourself by multiplying the factor
-  list (below) — don't trust a pasted decimal.
-- **Independently verified:** `ref/ref_carmichael.py::verify_certificate` confirms squarefree,
-  64 distinct primes (independent Miller–Rabin), and Korselt's criterion `(p−1) | (n−1)` for every
-  `p`. Every one of the 903 matches the run produced passed the oracle; 0 rejects.
-- **Sits between the known neighbours** — Webster's N₆₃ (145 digits) < this (149) < Webster's
-  N₆₅ candidate (151), sharing 53/64 primes with N₆₃ and 51/64 with N₆₅ — exactly where a true
-  S₆₄ should be.
+**Upper bound — a 148-digit incumbent** (improves the earlier 149-digit candidate), the product of
+64 distinct primes (largest **3697**):
 
-It is almost certainly **not** the true minimum: the search explored only exchange radius r ≤ 5
-from a few base sets over 54 of 120 portfolio moduli. Certifying a minimum (excluding every
-smaller 64-factor Carmichael, including outside the chosen pool) is a different, much larger
-problem and is not claimed here.
+```
+19·29·31·37·41·43·47·53·61·67·71·73·79·89·97·101·103·109·113·127·131·137·139·151·157·163·167·181·193·197·199·211·239·241·251·257·271·277·281·307·313·331·337·353·379·397·401·421·433·449·461·463·491·541·547·577·599·631·673·811·829·883·1951·3697
+```
+
+- Value + metadata in [`results_k64_best_global.json`](results_k64_best_global.json)
+  (modulus `1768248177696000`). **Re-derive it by multiplying the factor list — don't trust a
+  pasted decimal.** `ref/ref_carmichael.py::verify_certificate` confirms squarefree, 64 distinct
+  primes (independent Miller–Rabin), Korselt `(p−1)|(N−1)` for every `p`; `10^147 ≤ N < 10^148`.
+- Sits between Webster's neighbours `N₆₃` (145 digits) and the `N₆₅` candidate (151), where a true
+  `S₆₄` must lie. Still an **upper bound**, not a certified minimum — the exchange search explored
+  only radius `r ≤ 5` over part of the modulus portfolio.
+- The original 149-digit candidate and its full write-up remain in
+  [`results_k64.json`](results_k64.json) / [`RESULTS_k64.md`](RESULTS_k64.md).
+
+**Lower bound — `S₆₄ ≥ 10¹⁴⁵`.** Korselt's pairwise condition forces the 63 smallest factors of any
+64-factor Carmichael to multiply to at least a 142-digit constant `C`, so any such `n < 10¹⁴⁵` has
+all prime factors `≤ 5518` (a universe of 727 odd primes). Exhausting every admissible 64-subset of
+that universe below 10¹⁴⁵ gives 127,092 complete products and **zero** Carmichael numbers. See
+[`INTERVAL_THEOREM.md`](INTERVAL_THEOREM.md) for the three independent reproductions and
+[`paper/interval_theorem.tex`](paper/interval_theorem.tex) for the proofs.
 
 ## Method
 

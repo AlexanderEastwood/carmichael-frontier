@@ -13,6 +13,11 @@ src/carmichael_par
 src/mitm
 src/mitm64
 src/mitm64_fixed
+# latex build artifacts (keep .tex and .pdf)
+paper/*.aux
+paper/*.log
+paper/*.toc
+paper/*.synctex.gz
 # python
 __pycache__/
 *.pyc
