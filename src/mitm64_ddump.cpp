@@ -20,6 +20,7 @@ typedef unsigned long long u64; typedef unsigned __int128 u128;
 static u64 M; static int R; static u128 Dmin; static std::vector<u64> B;   // B ascending, |B| = 64
 static std::vector<u128> SUF;          // SUF[t] = product of the t largest base primes (t <= R)
 static std::vector<u64> buf; static u64 total = 0;
+static bool BITMASK = false;           // env DDUMP_BITMASK=1 (automatic for r > 10): id = 64-bit mask of deleted base indices
 static inline u64 mulmodM(u64 a, u64 b){ return (u64)(((u128)a * b) % M); }
 static u128 parse_u128(const char* s){ u128 v=0; for(;*s;++s) v = v*10 + (u128)(*s-'0'); return v; }
 static void flush(){ if(!buf.empty()){ fwrite(buf.data(),8,buf.size(),stdout); buf.clear(); } }
@@ -27,7 +28,9 @@ static void flush(){ if(!buf.empty()){ fwrite(buf.data(),8,buf.size(),stdout); b
 // available) < Dmin" cuts early; ids are still emitted with ascending index positions.
 static void rec(int hi, int depth, u128 prod, u64 res, int idx[]){
     if(depth==R){
-        u64 id=0; for(int j=R-1,pos=0;j>=0;--j,++pos) id |= ((u64)idx[j]) << (6*pos);   // ascending order
+        u64 id=0;
+        if(BITMASK){ for(int j=0;j<R;++j) id |= 1ULL<<idx[j]; }                          // 64-bit deletion mask (any r)
+        else { for(int j=R-1,pos=0;j>=0;--j,++pos) id |= ((u64)idx[j]) << (6*pos); }   // 6-bit packed, ascending (r<=10)
         buf.push_back(mulmodM(1,res)); buf.push_back(id); ++total; if(buf.size()>=(1u<<20)) flush(); return;
     }
     const int t = R-depth-1;                       // deletions still needed after this one
@@ -43,10 +46,12 @@ int main(){
     char s[160];
     if(scanf("%llu %d %159s",&M,&R,s)!=3) return 2; Dmin=parse_u128(s);
     int nB; if(scanf("%d",&nB)!=1) return 2; B.resize(nB); for(auto&x:B) if(scanf("%llu",&x)!=1) return 2;
-    if(nB!=64 || R<1 || R>10){ fprintf(stderr,"need 64 base primes and 1<=r<=10\n"); return 3; }
+    if(const char* b=getenv("DDUMP_BITMASK")) BITMASK = atoi(b)!=0;
+    if(R>10) BITMASK = true;
+    if(nB!=64 || R<1 || R>16){ fprintf(stderr,"need 64 base primes and 1<=r<=16\n"); return 3; }
     for(int i=1;i<nB;i++) if(B[i]<=B[i-1]){ fprintf(stderr,"base must be strictly ascending\n"); return 4; }
     static char obuf[1<<22]; setvbuf(stdout, obuf, _IOFBF, sizeof obuf); buf.reserve(1<<20);
     int idx[16]; rec(nB-1, 0, (u128)1, 1, idx); flush(); fflush(stdout);
-    fprintf(stderr,"TOTAL %llu records (r=%d, filtered by prodD >= Dmin)\n", total, R);
+    fprintf(stderr,"TOTAL %llu records (r=%d, filtered by prodD >= Dmin, ids=%s)\n", total, R, BITMASK?"bitmask":"6-bit");
     return 0;
 }

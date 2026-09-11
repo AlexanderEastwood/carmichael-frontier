@@ -25,7 +25,10 @@ def pool(D, cap):
 def main() -> None:
     fam = json.load(open(os.path.join(HERE, "mstar_divisor_family.json")))
     inc = json.load(open(os.path.join(FR, "results_k64_best_global.json"))); U = int(inc["n"])
-    todo = [r for r in fam if r["s"] > S_MAX_SKIP]; log(f"family {len(fam)} survivors; running {len(todo)} (s>{S_MAX_SKIP}); U={len(str(U))} digits")
+    todo = [r for r in fam if r["s"] > S_MAX_SKIP]
+    if os.environ.get("S_ONLY_LE"):                      # e.g. S_ONLY_LE=3: the 23 neighbourhood moduli at ALL feasible radii, full capped pools
+        todo = [r for r in fam if r["s"] <= int(os.environ["S_ONLY_LE"])]
+    log(f"family {len(fam)} survivors; running {len(todo)}; U={len(str(U))} digits")
     n_r0 = 0; n_hit = 0
     for row in sorted(todo, key=lambda r: r["rmax"]):
         D, cap, rmax = int(row["D"]), int(row["cap"]), int(row["rmax"])
@@ -37,7 +40,8 @@ def main() -> None:
         ck = os.path.join(HERE, "checkpoint_mstar_fam.json")
         if os.path.exists(ck): os.remove(ck)
         env = dict(os.environ, MODULUS=str(D), DFILTER="1", CKPT_TAG="fam", R_MIN="1", R_MAX=str(rmax), BASES="ksmall",
-                   INS_PRIME_CAP=str(cap + 1), INS_MAX="256", SPLIT="4000", IDUMP_T="8", IDUMP_TIMEOUT="1800", WALL_CAP="1500")
+                   INS_PRIME_CAP=str(cap + 1), INS_MAX=os.environ.get("FAM_INS_MAX", "1024"), SPLIT="4000", IDUMP_T="8",
+                   IDUMP_TIMEOUT=os.environ.get("FAM_IDUMP_TIMEOUT", "1800"), WALL_CAP=os.environ.get("FAM_WALL_CAP", "1500"))
         t = time.time(); lf = os.path.join(HERE, f"run_fam_D{D}.log")
         with open(lf, "w") as out: rc = subprocess.call([PY, "-u", DRIVER], stdout=out, stderr=subprocess.STDOUT, env=env, stdin=subprocess.DEVNULL)
         txt = open(lf).read(); inst = txt.count("dfilter"); skipped = txt.count("no stratum"); inc_ = txt.count("INCOMPLETE")

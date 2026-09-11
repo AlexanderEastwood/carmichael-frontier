@@ -26,7 +26,9 @@ static int SPLIT_IDX = 1 << 30; static int HMAX = 1 << 30;
 //   4. env IDUMP_RANK=1: ids are the colex rank of the index subset, id = sum_j C(i_j, j+1)
 //      (i_0 < ... < i_{r-1}), instead of 8-bit packed indices -- lifts the r<=8 limit
 //      (C(256,10) < 2^62). Decode by greedy unranking from the top.
-static bool RANK = false; static u64 CB[257][12];
+static bool RANK = false; static u128 CB[1025][17];    // C(n,k) exact in u128; ids require C(nI,R) < 2^64 (checked)
+// overflow-safe "a*b >= cap" for u128 (a*b overflowing 128 bits is certainly >= cap)
+static inline bool mul_ge(u128 a, u128 b, u128 cap){ u128 r; if(__builtin_mul_overflow(a,b,&r)) return true; return r>=cap; }
 static std::mutex out_mx;
 static inline u64 mulmodM(u64 a, u64 b){ return (u64)(((u128)a * b) % M); }
 static u128 parse_u128(const char* s){ u128 v=0; for(;*s;++s) v = v*10 + (u128)(*s-'0'); return v; }
@@ -38,16 +40,19 @@ struct Writer {
     ~Writer(){ flush(); }
 };
 // window product INS[a..a+t-1] exactly (PRE ratios need division; keep it exact by multiplying t terms)
-static inline u128 window(int a, int t){ u128 v=1; for(int j=0;j<t;++j) v*=INS[a+j]; return v; }
+// np * INS[a] * ... * INS[a+t-1] >= cap, overflow-safe (any 128-bit overflow means the true product is >= cap)
+static inline bool np_window_ge(u128 np, int a, int t, u128 cap){
+    u128 v=np; for(int j=0;j<t;++j){ if(__builtin_mul_overflow(v,(u128)INS[a+j],&v)) return true; } return v>=cap;
+}
 static void rec(int start,int depth,u128 prod,u64 resI,u64 id,int nlarge,Writer& w){
     if(depth==R){ w.put(mulmodM(P0modM,resI), id); return; }
     const int n=(int)INS.size(); const int t=R-depth-1;        // insertions still needed after this one
     for(int i=start; i<=n-1-t; ++i){
         if(i>=SPLIT_IDX && nlarge+1>HMAX) break;                // all later INS are > SPLIT too
+        if(mul_ge(prod,INS[i],Icap)) break;
         u128 np=prod*INS[i];
-        if(np>=Icap) break;
-        if(t>0 && np*window(i+1,t)>=Icap) break;                // cheapest completion already too big
-        rec(i+1,depth+1,np,mulmodM(resI,INS[i]%M), RANK ? id + CB[i][depth+1] : id | ((u64)i<<(8*depth)), nlarge + (i>=SPLIT_IDX), w);
+        if(t>0 && np_window_ge(np,i+1,t,Icap)) break;           // cheapest completion already too big
+        rec(i+1,depth+1,np,mulmodM(resI,INS[i]%M), RANK ? id + (u64)CB[i][depth+1] : id | ((u64)i<<(8*depth)), nlarge + (i>=SPLIT_IDX), w);
     }
 }
 int main(){
@@ -58,8 +63,9 @@ int main(){
     int nB; if(scanf("%d",&nB)!=1) return 2; for(int i=0;i<nB;i++) if(scanf("%llu",&junk)!=1) return 2;
     int nI; if(scanf("%d",&nI)!=1) return 2; INS.resize(nI); for(auto&x:INS) if(scanf("%llu",&x)!=1) return 2;
     if(const char* rk=getenv("IDUMP_RANK")) RANK = atoi(rk)!=0;
-    if(nI>256 || (R>8 && !RANK) || R>10){ fprintf(stderr,"nI<=256 and r<=8 required (8-bit packing); r<=10 with IDUMP_RANK=1\n"); return 3; }
-    for(int n=0;n<=256;n++){ CB[n][0]=1; for(int k=1;k<12;k++) CB[n][k]= n? CB[n-1][k-1]+CB[n-1][k] : 0; }   // C(n,k), C(256,10)<2^62
+    if(nI>1024 || R>16 || (!RANK && (nI>256 || R>8))){ fprintf(stderr,"8-bit packing needs nI<=256, r<=8; IDUMP_RANK=1 allows nI<=1024, r<=16 (ids must satisfy C(nI,r) < 2^64)\n"); return 3; }
+    for(int n=0;n<=1024;n++){ CB[n][0]=1; for(int k=1;k<17;k++) CB[n][k]= n? CB[n-1][k-1]+CB[n-1][k] : 0; }   // C(n,k) exact in u128
+    if(RANK && CB[nI][R] > (u128)~0ULL){ fprintf(stderr,"rank ids overflow u64: C(%d,%d) >= 2^64 -- shrink the pool (per-radius cap)\n",nI,R); return 5; }
     for(int i=1;i<nI;i++) if(INS[i]<=INS[i-1]){ fprintf(stderr,"INS must be strictly ascending\n"); return 4; }
     if(const char* s=getenv("IDUMP_SPLIT")){ u64 sp=strtoull(s,nullptr,10); SPLIT_IDX=nI; for(int i=0;i<nI;i++) if(INS[i]>sp){ SPLIT_IDX=i; break; } }
     if(const char* h=getenv("IDUMP_HMAX")) HMAX=atoi(h);
@@ -71,7 +77,7 @@ int main(){
         for(int i0=t;i0<=(int)INS.size()-1-tt;i0+=T){
             if(i0>=SPLIT_IDX && 1>HMAX) break;
             u128 np=(u128)INS[i0]; if(np>=Icap) continue;                 // striped: cannot break globally
-            if(tt>0 && np*window(i0+1,tt)>=Icap) continue;
+            if(tt>0 && np_window_ge(np,i0+1,tt,Icap)) continue;
             rec(i0+1,1,np,INS[i0]%M,(u64)i0,(i0>=SPLIT_IDX),w);
         }
         w.flush(); counts[t]=w.n;

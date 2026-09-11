@@ -144,6 +144,40 @@ def consider(prov, factors, lever):
         save(); return True
     return False
 
+def run_instance_host(tag, B0, INS, r, hmax, P0, U, Icap, Dmin, n_full):
+    """Exact host-side join for tiny instances or Icap beyond 126 bits (r=14 at M* needs 134-bit
+    products): D side from ddump (filtered), I side enumerated in Python with the same product,
+    cheapest-completion and h-stratum bounds, joined by residue mod M."""
+    from itertools import combinations
+    t0 = time.time(); B0set = set(B0)
+    inp = (f"{M} {r} {Dmin}\n64 " + " ".join(map(str, sorted(B0))) + "\n").encode()
+    pr = subprocess.run([DDUMP], input=inp, capture_output=True, check=True)
+    a = np.frombuffer(pr.stdout, dtype=np.uint64).reshape(-1, 2); nD = a.shape[0]
+    Dmap = {}
+    for kkey, v in a:
+        d = tuple(b for b in range(K) if (int(v) >> b) & 1) if r > 10 else tuple((int(v) >> (6 * q)) & 63 for q in range(r))
+        Dmap.setdefault(int(kkey), []).append(d)
+    nI = 0; pairs = 0; below = 0; nb = 0; rmin = None; P0m = P0 % M
+    for c in combinations(range(len(INS)), r):
+        if sum(1 for i in c if INS[i] > SPLIT) > hmax: continue
+        prodI = 1
+        for i in c: prodI *= INS[i]
+        if prodI >= Icap: continue
+        nI += 1; key = (P0m * (prodI % M)) % M
+        for d in Dmap.get(key, ()):
+            pairs += 1; D = [B0[x] for x in d]; prodD = 1
+            for p in D: prodD *= p
+            if (P0 * prodI) % prodD: continue
+            n = P0 * prodI // prodD
+            if n >= cur_U(): continue
+            below += 1; fac = sorted((B0set - set(D)) | set(INS[i] for i in c))
+            if consider((M, tag, r, hmax), fac, f"mstar_{tag}_r{r}_h<={hmax}_host"): nb += 1
+            if rmin is None or n < rmin: rmin = n
+    state["instances"] += 1; state["pairs_total"] += pairs; state["completions_below_U"] += below
+    log(f"  {tag} r={r} h<={hmax} |INS|={len(INS)}/{n_full} host-exact: D {nD:,} | I {nI:,} rec {time.time()-t0:.0f}s pairs={pairs} below_U={below} "
+        f"min_digits={len(str(rmin)) if rmin else None} improved={nb}")
+    return True
+
 def run_instance(tag, B0, INS, r, hmax):
     B0set = set(B0); B0s = sorted(B0); P0 = 1
     for p in B0: P0 *= p
@@ -156,7 +190,16 @@ def run_instance(tag, B0, INS, r, hmax):
     Imin = 1
     for p in INS[:r]: Imin *= p
     Dmin = (P0 * Imin) // U + 1                    # improving completion needs prodD >= Dmin (P_B*P_I/P_D < U)
+    # per-radius insertion cap: in any r-subset with product < Icap the largest prime q satisfies
+    # q * (product of the r-1 smallest insertion primes) < Icap  =>  the affordable pool shrinks with r
+    Imin1 = 1
+    for p in INS[:r - 1]: Imin1 *= p
+    cap_r = (Icap - 1) // Imin1; INS_full = INS; INS = [q for q in INS if q <= cap_r]
+    if len(INS) < r:
+        log(f"  {tag} r={r}: affordable pool has {len(INS)} < r primes (cap_r={cap_r}); nothing to search"); state["instances"] += 1; return True
     rank = RANK or r > 8                           # 8-bit packed I ids only hold r <= 8
+    if Icap.bit_length() > 126 or comb(len(INS), r) < 200_000:      # tiny or beyond u128: exact host join
+        return run_instance_host(tag, B0, INS, r, hmax, P0, U, Icap, Dmin, len(INS_full))
     t = time.time(); Dch, nD = build_D(B0, M, r, Dmin); tD = time.time() - t
     inp = ("\n".join([f"{M} {r} {P0 % M} {Icap} {pdm} {IDUMP_T} 0", "64 " + " ".join(map(str, B0)), f"{len(INS)} " + " ".join(map(str, INS))]) + "\n").encode()
     env = dict(os.environ, IDUMP_SPLIT=str(SPLIT), IDUMP_HMAX=str(hmax), IDUMP_RANK="1" if rank else "0")
@@ -175,7 +218,8 @@ def run_instance(tag, B0, INS, r, hmax):
             if pd.size == 0: continue
             pairs += int(pd.size)
             Idec = [unrank_colex(v, r, len(INS)) for v in cp.asnumpy(pi)] if rank else G.decode_ids(pi, r, 8)
-            for d, i in zip(G.decode_ids(pd, r, 6), Idec):
+            Ddec = [tuple(b for b in range(K) if (int(v) >> b) & 1) for v in cp.asnumpy(pd)] if r > 10 else G.decode_ids(pd, r, 6)
+            for d, i in zip(Ddec, Idec):
                 D = [B0[x] for x in d]; I = [INS[x] for x in i]
                 prodD = 1
                 for p in D: prodD *= p
