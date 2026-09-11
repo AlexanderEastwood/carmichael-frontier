@@ -44,7 +44,7 @@ leaves -= REPLACED
 # workers AND had idle cores donated to their feasibility-pruned +4 children. Either verdict covers
 # the slice: its own n=NONE, or n=NONE on every one of its SUBJOBS9 children.
 ALT = {}
-for lst, depth in (("SUBJOBS9", 14), ("SUBJOBS10", 18)):      # donated frontiers: parent depth -> children list
+for lst, depth in (("SUBJOBS9", 14), ("SUBJOBS10", 18), ("SUBJOBS11", 22)):   # donated frontiers: parent depth -> children list
     pl = os.path.join(JD, lst)
     if os.path.exists(pl):
         for line in open(pl):
