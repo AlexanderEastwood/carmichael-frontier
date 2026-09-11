@@ -33,6 +33,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); FR = os.path.abspath(os.path.
 sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(FR, "ref"))
 import ref_carmichael as ref
 import mitm_gpu2 as G
+import igen_gpu as IG          # GPU insertion generator (IGEN=gpu)
 import numpy as np, cupy as cp
 
 R_MIN = int(os.environ.get("R_MIN", "5")); R_MAX = int(os.environ.get("R_MAX", "8"))
@@ -47,6 +48,8 @@ CKPT = os.path.join(HERE, f"checkpoint_mstar{('_' + CKPT_TAG) if CKPT_TAG else '
 RESULTS = os.path.join(HERE, f"results_k64_gpu_mstar{('_' + CKPT_TAG) if CKPT_TAG else ''}.json")
 DFILTER = os.environ.get("DFILTER", "0") == "1"   # product-filtered deletion side (src/mitm64_ddump), resident on GPU
 RANK = os.environ.get("RANK", "0") == "1"         # force colex-rank insertion ids (automatic for r > 8)
+IGEN = os.environ.get("IGEN", "cpu")              # "gpu": generate the insertion side on the GPU (gpu/igen_gpu.py) for 3 <= r <= 8
+IGEN_RMAX = int(os.environ.get("IGEN_RMAX", "6"))  # GPU generator only up to this radius (depth-3 prefix split balances poorly at r=7,8 on small pools)
 DDUMP = os.path.join(FR, "src", "mitm64_ddump")
 K = 64; T0 = time.time()
 def log(*a): print(f"[{time.time()-T0:8.1f}s]", *a, flush=True)
@@ -204,6 +207,40 @@ def run_instance(tag, B0, INS, r, hmax):
     if Icap.bit_length() > 126 or comb(len(INS), r) < 200_000:      # tiny or beyond u128: exact host join
         return run_instance_host(tag, B0, INS, r, hmax, P0, U, Icap, Dmin, len(INS_full))
     t = time.time(); Dch, nD = build_D(B0, M, r, Dmin); tD = time.time() - t
+    if IGEN == "gpu" and 3 <= r <= min(8, IGEN_RMAX) and comb(len(INS), r) < 2 ** 64:
+        # GPU insertion generator (gpu/igen_gpu.py): superset of the exact-integer dumper's records
+        # (float64 log-space bounds with a conservative margin); every join match is re-checked exactly below.
+        t0 = time.time(); pairs = 0; below = 0; nb = 0; rmin = None; nI = 0
+        gen = IG.generate_chunks(INS, r, M, P0, Icap, SPLIT, hmax, max_records=I_CHUNK)
+        while True:
+            try: Ik, Iid = next(gen)
+            except StopIteration as st: nI = st.value or nI; break
+            nI += int(Ik.size)
+            Ik_s, Iid_s = G.sort_side(Ik, Iid); del Ik, Iid
+            for Dk_s, Did_s in Dch:
+                pd, pi = G.join_sorted(Dk_s, Did_s, Ik_s, Iid_s)
+                if pd.size == 0: continue
+                pairs += int(pd.size)
+                Idec = [unrank_colex(v, r, len(INS)) for v in cp.asnumpy(pi)]
+                Ddec = [tuple(b for b in range(K) if (int(v) >> b) & 1) for v in cp.asnumpy(pd)] if r > 10 else G.decode_ids(pd, r, 6)
+                for d, i in zip(Ddec, Idec):
+                    D = [B0[x] for x in d]; I = [INS[x] for x in i]
+                    prodD = 1
+                    for p in D: prodD *= p
+                    prodI = 1
+                    for p in I: prodI *= p
+                    if prodI >= Icap or (P0 * prodI) % prodD: continue
+                    n = P0 * prodI // prodD
+                    if n >= cur_U(): continue
+                    below += 1; fac = sorted((B0set - set(D)) | set(I))
+                    if consider((M, tag, r, hmax), fac, f"mstar_{tag}_r{r}_h<={hmax}_igpu"): nb += 1
+                    if rmin is None or n < rmin: rmin = n
+            del Ik_s, Iid_s; cp.get_default_memory_pool().free_all_blocks()
+        del Dch; cp.get_default_memory_pool().free_all_blocks(); dt = time.time() - t0; state["instances"] += 1
+        state["pairs_total"] += pairs; state["completions_below_U"] += below
+        log(f"  {tag} r={r} h<={hmax} |INS|={len(INS)}{' dfilter' if DFILTER else ''} rank igpu: D {nD:,} {tD:.1f}s | I {nI:,} rec {dt:.1f}s pairs={pairs} below_U={below} "
+            f"min_digits={len(str(rmin)) if rmin else None} improved={nb} | GPU {gpu_used_gb():.1f}GB")
+        return True
     inp = ("\n".join([f"{M} {r} {P0 % M} {Icap} {pdm} {IDUMP_T} 0", "64 " + " ".join(map(str, B0)), f"{len(INS)} " + " ".join(map(str, INS))]) + "\n").encode()
     env = dict(os.environ, IDUMP_SPLIT=str(SPLIT), IDUMP_HMAX=str(hmax), IDUMP_RANK="1" if rank else "0")
     pr = subprocess.Popen([IDUMP], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
