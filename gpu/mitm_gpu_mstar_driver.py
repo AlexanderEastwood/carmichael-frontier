@@ -42,12 +42,19 @@ NCHUNKS_D = int(os.environ.get("NCHUNKS_D", "16")); I_CHUNK = int(os.environ.get
 IDUMP_T = int(os.environ.get("IDUMP_T", "8")); IDUMP_TIMEOUT = float(os.environ.get("IDUMP_TIMEOUT", "3600"))
 WALL_CAP = float(os.environ.get("WALL_CAP", "14400"))
 IDUMP = os.path.join(FR, "src", "mitm64_idump_stream2")
-CKPT = os.path.join(HERE, "checkpoint_mstar.json"); RESULTS = os.path.join(HERE, "results_k64_gpu_mstar.json")
+CKPT_TAG = os.environ.get("CKPT_TAG", "")        # e.g. "r9" -> checkpoint_mstar_r9.json / results_k64_gpu_mstar_r9.json
+CKPT = os.path.join(HERE, f"checkpoint_mstar{('_' + CKPT_TAG) if CKPT_TAG else ''}.json")
+RESULTS = os.path.join(HERE, f"results_k64_gpu_mstar{('_' + CKPT_TAG) if CKPT_TAG else ''}.json")
+DFILTER = os.environ.get("DFILTER", "0") == "1"   # product-filtered deletion side (src/mitm64_ddump), resident on GPU
+RANK = os.environ.get("RANK", "0") == "1"         # force colex-rank insertion ids (automatic for r > 8)
+DDUMP = os.path.join(FR, "src", "mitm64_ddump")
 K = 64; T0 = time.time()
 def log(*a): print(f"[{time.time()-T0:8.1f}s]", *a, flush=True)
 
 inc = json.load(open(os.path.join(FR, "results_k64_best_global.json")))
 U0 = int(inc["n"]); U0_factors = sorted(int(p) for p in inc["factors"])
+if os.environ.get("U_OVERRIDE"):                  # validation only: search below a frozen (older) bound
+    U0 = int(os.environ["U_OVERRIDE"]); assert U0 > 10**140
 M = int(os.environ.get("MODULUS") or inc["modulus"])
 state = {"modulus": str(M), "orig_incumbent": str(U0), "incumbent": None, "incumbent_factors": None,
          "done": [], "instances": 0, "pairs_total": 0, "completions_below_U": 0, "oracle_rejects": 0,
@@ -87,11 +94,33 @@ def hmax_for(B0, INS, r, U):
         if v < U * Dmax: best = h            # bound below the incumbent: this stratum can improve
     return best
 
-def build_D(B0, M, r):
+def build_D(B0, M, r, Dmin=None):
+    """Sorted D-side chunks. DFILTER: only deletion subsets with prodD >= Dmin (src/mitm64_ddump,
+    CPU, resident on GPU); else the full C(64,r) via the GPU kernel in NCHUNKS_D pieces."""
+    if DFILTER:
+        assert Dmin is not None and os.path.exists(DDUMP), DDUMP
+        inp = (f"{M} {r} {Dmin}\n64 " + " ".join(map(str, sorted(B0))) + "\n").encode()
+        pr = subprocess.run([DDUMP], input=inp, capture_output=True, check=True)
+        a = np.frombuffer(pr.stdout, dtype=np.uint64).reshape(-1, 2)
+        nD = int([l for l in pr.stderr.decode().splitlines() if l.startswith("TOTAL")][0].split()[1]); assert a.shape[0] == nD
+        chunks = []
+        for part in np.array_split(np.arange(nD), max(1, min(NCHUNKS_D, nD // 50_000_000 + 1))):
+            if part.size == 0: continue
+            k = cp.asarray(np.ascontiguousarray(a[part, 0])); i = cp.asarray(np.ascontiguousarray(a[part, 1]))
+            chunks.append(G.sort_side(k, i)); del k, i
+        del a; cp.get_default_memory_pool().free_all_blocks(); return chunks, nD
     tot = comb(K, r); b = [tot * i // NCHUNKS_D for i in range(NCHUNKS_D + 1)]; chunks = []
     for a, c in zip(b, b[1:]):
         k, i = G.generate(B0, r, M, 1, bits=6, lo=a, hi=c); chunks.append(G.sort_side(k, i)); del k, i
-    cp.get_default_memory_pool().free_all_blocks(); return chunks
+    cp.get_default_memory_pool().free_all_blocks(); return chunks, tot
+
+def unrank_colex(v, r, n):
+    """Inverse of the dumper's colex rank id = sum_j C(i_j, j+1), i_0 < ... < i_{r-1} < n."""
+    v = int(v); idx = []; x = n - 1
+    for j in range(r - 1, -1, -1):
+        while comb(x, j + 1) > v: x -= 1
+        idx.append(x); v -= comb(x, j + 1); x -= 1
+    assert v == 0; return tuple(reversed(idx))
 
 def _read_block(f, nbytes):
     buf = bytearray(nbytes); mv = memoryview(buf); got = 0
@@ -124,9 +153,13 @@ def run_instance(tag, B0, INS, r, hmax):
     for p in B0s[-r:]: ptb *= p
     Icap = max(1, min(topI, (U * ptb) // P0 + 1)); pdm = 1
     for p in B0s[:r]: pdm *= p
-    t = time.time(); Dch = build_D(B0, M, r); tD = time.time() - t
+    Imin = 1
+    for p in INS[:r]: Imin *= p
+    Dmin = (P0 * Imin) // U + 1                    # improving completion needs prodD >= Dmin (P_B*P_I/P_D < U)
+    rank = RANK or r > 8                           # 8-bit packed I ids only hold r <= 8
+    t = time.time(); Dch, nD = build_D(B0, M, r, Dmin); tD = time.time() - t
     inp = ("\n".join([f"{M} {r} {P0 % M} {Icap} {pdm} {IDUMP_T} 0", "64 " + " ".join(map(str, B0)), f"{len(INS)} " + " ".join(map(str, INS))]) + "\n").encode()
-    env = dict(os.environ, IDUMP_SPLIT=str(SPLIT), IDUMP_HMAX=str(hmax))
+    env = dict(os.environ, IDUMP_SPLIT=str(SPLIT), IDUMP_HMAX=str(hmax), IDUMP_RANK="1" if rank else "0")
     pr = subprocess.Popen([IDUMP], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
     assert pr.stdin and pr.stdout and pr.stderr
     pr.stdin.write(inp); pr.stdin.close()
@@ -141,7 +174,8 @@ def run_instance(tag, B0, INS, r, hmax):
             pd, pi = G.join_sorted(Dk_s, Did_s, Ik_s, Iid_s)
             if pd.size == 0: continue
             pairs += int(pd.size)
-            for d, i in zip(G.decode_ids(pd, r, 6), G.decode_ids(pi, r, 8)):
+            Idec = [unrank_colex(v, r, len(INS)) for v in cp.asnumpy(pi)] if rank else G.decode_ids(pi, r, 8)
+            for d, i in zip(G.decode_ids(pd, r, 6), Idec):
                 D = [B0[x] for x in d]; I = [INS[x] for x in i]
                 prodD = 1
                 for p in D: prodD *= p
@@ -163,7 +197,7 @@ def run_instance(tag, B0, INS, r, hmax):
         log(f"  {tag} r={r} h<={hmax}: INCOMPLETE ({'timeout' if timed_out else f'read {read_rec:,} != TOTAL {nI:,} rc={pr.returncode}'}) after {dt:.0f}s; NOT counted")
         return False
     state["pairs_total"] += pairs; state["completions_below_U"] += below
-    log(f"  {tag} r={r} h<={hmax} |INS|={len(INS)}: D {comb(K,r):,} {tD:.1f}s | I {nI:,} rec {dt:.0f}s pairs={pairs} below_U={below} "
+    log(f"  {tag} r={r} h<={hmax} |INS|={len(INS)}{' dfilter' if DFILTER else ''}{' rank' if rank else ''}: D {nD:,} {tD:.1f}s | I {nI:,} rec {dt:.0f}s pairs={pairs} below_U={below} "
         f"min_digits={len(str(rmin)) if rmin else None} improved={nb} | GPU {gpu_used_gb():.1f}GB")
     return True
 

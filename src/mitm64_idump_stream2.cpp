@@ -23,6 +23,10 @@ typedef unsigned long long u64; typedef unsigned __int128 u128;
 static u64 M, P0modM; static int R, T; static u128 Icap; static std::vector<u64> INS;
 static std::vector<u128> PRE;                       // PRE[j] = prod INS[0..j-1]  (u128: <= 8 primes < 10^5)
 static int SPLIT_IDX = 1 << 30; static int HMAX = 1 << 30;
+//   4. env IDUMP_RANK=1: ids are the colex rank of the index subset, id = sum_j C(i_j, j+1)
+//      (i_0 < ... < i_{r-1}), instead of 8-bit packed indices -- lifts the r<=8 limit
+//      (C(256,10) < 2^62). Decode by greedy unranking from the top.
+static bool RANK = false; static u64 CB[257][12];
 static std::mutex out_mx;
 static inline u64 mulmodM(u64 a, u64 b){ return (u64)(((u128)a * b) % M); }
 static u128 parse_u128(const char* s){ u128 v=0; for(;*s;++s) v = v*10 + (u128)(*s-'0'); return v; }
@@ -43,7 +47,7 @@ static void rec(int start,int depth,u128 prod,u64 resI,u64 id,int nlarge,Writer&
         u128 np=prod*INS[i];
         if(np>=Icap) break;
         if(t>0 && np*window(i+1,t)>=Icap) break;                // cheapest completion already too big
-        rec(i+1,depth+1,np,mulmodM(resI,INS[i]%M), id | ((u64)i<<(8*depth)), nlarge + (i>=SPLIT_IDX), w);
+        rec(i+1,depth+1,np,mulmodM(resI,INS[i]%M), RANK ? id + CB[i][depth+1] : id | ((u64)i<<(8*depth)), nlarge + (i>=SPLIT_IDX), w);
     }
 }
 int main(){
@@ -53,7 +57,9 @@ int main(){
     int maxm; if(scanf("%d %d",&T,&maxm)!=2) return 2;
     int nB; if(scanf("%d",&nB)!=1) return 2; for(int i=0;i<nB;i++) if(scanf("%llu",&junk)!=1) return 2;
     int nI; if(scanf("%d",&nI)!=1) return 2; INS.resize(nI); for(auto&x:INS) if(scanf("%llu",&x)!=1) return 2;
-    if(nI>256 || R>8){ fprintf(stderr,"nI<=256 and r<=8 required (8-bit packing)\n"); return 3; }
+    if(const char* rk=getenv("IDUMP_RANK")) RANK = atoi(rk)!=0;
+    if(nI>256 || (R>8 && !RANK) || R>10){ fprintf(stderr,"nI<=256 and r<=8 required (8-bit packing); r<=10 with IDUMP_RANK=1\n"); return 3; }
+    for(int n=0;n<=256;n++){ CB[n][0]=1; for(int k=1;k<12;k++) CB[n][k]= n? CB[n-1][k-1]+CB[n-1][k] : 0; }   // C(n,k), C(256,10)<2^62
     for(int i=1;i<nI;i++) if(INS[i]<=INS[i-1]){ fprintf(stderr,"INS must be strictly ascending\n"); return 4; }
     if(const char* s=getenv("IDUMP_SPLIT")){ u64 sp=strtoull(s,nullptr,10); SPLIT_IDX=nI; for(int i=0;i<nI;i++) if(INS[i]>sp){ SPLIT_IDX=i; break; } }
     if(const char* h=getenv("IDUMP_HMAX")) HMAX=atoi(h);
@@ -73,6 +79,6 @@ int main(){
     for(auto&x:th) x.join();
     fflush(stdout);
     u64 tot=0; for(int t=0;t<T;t++){ tot+=counts[t]; fprintf(stderr,"t%d %llu\n",t,counts[t]); }
-    fprintf(stderr,"TOTAL %llu records (r=%d, |INS|=%d, split_idx=%d, hmax=%d)\n",tot,R,nI,SPLIT_IDX,HMAX);
+    fprintf(stderr,"TOTAL %llu records (r=%d, |INS|=%d, split_idx=%d, hmax=%d, ids=%s)\n",tot,R,nI,SPLIT_IDX,HMAX,RANK?"colex-rank":"8-bit");
     return 0;
 }
