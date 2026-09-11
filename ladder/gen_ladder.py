@@ -60,8 +60,11 @@ def relaxed_bounds():
     return C, stats
 
 def load_U(k, root):
-    f = os.path.join(root, f"results_k{k}.json")
-    if k == 64: f = os.path.join(root, "results_k64_best_global.json")   # the 148-digit incumbent N, not the old 149
+    # k=66..144 incumbents are published under incumbents/ (exact n + factor lists) so every
+    # upper bound is independently checkable from the public repository; k=64/65 have named files.
+    f = os.path.join(root, "incumbents", f"results_k{k}.json")
+    if not os.path.exists(f): f = os.path.join(root, f"results_k{k}.json")
+    if k == 64: f = os.path.join(root, "results_k64_best_global.json")   # the current incumbent N'
     if k == 65: f = os.path.join(root, "results_k65_webster_verified.json")
     if not os.path.exists(f): return None
     d = json.load(open(f)); n = int(d["n"]); facs = [int(x) for x in d["factors"]]
@@ -70,7 +73,7 @@ def load_U(k, root):
     ok = ref.verify_certificate(facs)
     return {"n": n, "factors": facs, "digits": len(str(n)), "nfactors": len(facs),
             "product_eq_n": prod == n, "oracle_ok": bool(ok[0]) and len(facs) == k,
-            "largest_prime": max(facs), "source": os.path.basename(f)}
+            "largest_prime": max(facs), "source": os.path.relpath(f, root)}
 
 def main():
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
@@ -97,6 +100,8 @@ def main():
                      "U_k_digits": U["digits"] if U else None, "U_k_oracle_ok": U["oracle_ok"] if U else None,
                      "U_k_product_eq_n": U["product_eq_n"] if U else None, "U_k_largest_prime": U["largest_prime"] if U else None,
                      "U_k_source": U["source"] if U else None,
+                     "U_k": str(U["n"]) if U else None,                 # exact upper endpoint (re-derive from factors)
+                     "U_k_factors": U["factors"] if U else None,       # the certificate for the upper bound
                      "interval_digits": [len(str(low_int)), U["digits"]] if U else None})
     man = {"generated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "y": Y, "tail_limit": TAIL_LIMIT,
            "head_classes": st["classes"], "max_tail_prime_used": st["max_tail_prime_used"], "relaxed_pass_seconds": round(tC, 2),
