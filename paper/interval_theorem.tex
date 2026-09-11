@@ -237,7 +237,16 @@ $(q-1)\nmid\lambda(N)$ and a prime factor $q'$, not necessarily distinct from $q
 (the latter by Theorem~\ref{thm:restricted}, since $n<N<N_0$).
 \end{theorem}
 
-Both restricted minima are statements about a divisor family, not about $\Smin$. The census script
+Both restricted minima are statements about a divisor family, not about $\Smin$. The divisor-family
+computations reported here do not cover all possible Carmichael functions below $N$ and therefore do
+not certify global minimality: every competitor $n<N$ has $\lambda(n)$ dividing $L=\operatorname{lcm}\{q-1:\ q\le
+(N-1)/C_{63}\ \text{prime}\}$, a finite but astronomically large family of moduli (more than $10^{10\,000}$
+divisors of $L$ pass the pool-size and cheapest-product tests), and no argument is offered here that a
+modulus-first enumeration competes with preproduct exhaustion. Webster's separate exhaustive search is
+designed to provide global coverage by enumerating preproducts $P$ and computing $\lambda(P)$ from their
+prime factors, following the preproduct/composite-completion approach of Shallue and Webster
+(\emph{Algorithms for Carmichael numbers}, \S5 and \S7.4); the status of his $k=64$ computation is as
+communicated by him. The census script
 (\code{gpu/divisor\_family\_census.py}) is standard--library Python and independent of the GPU code;
 it discards a divisor with fewer than $64$ eligible primes below its sieve bound only after checking
 that no completion with primes beyond the bound could be below $U$.
