@@ -197,7 +197,7 @@ def run_instance(tag, B0, INS, r, hmax):
     cap_r = (Icap - 1) // Imin1; INS_full = INS; INS = [q for q in INS if q <= cap_r]
     if len(INS) < r:
         log(f"  {tag} r={r}: affordable pool has {len(INS)} < r primes (cap_r={cap_r}); nothing to search"); state["instances"] += 1; return True
-    rank = RANK or r > 8                           # 8-bit packed I ids only hold r <= 8
+    rank = RANK or r > 8 or len(INS) > 256         # 8-bit packed I ids only hold r <= 8 and pools <= 256 primes
     if Icap.bit_length() > 126 or comb(len(INS), r) < 200_000:      # tiny or beyond u128: exact host join
         return run_instance_host(tag, B0, INS, r, hmax, P0, U, Icap, Dmin, len(INS_full))
     t = time.time(); Dch, nD = build_D(B0, M, r, Dmin); tD = time.time() - t
@@ -265,8 +265,9 @@ def main():
             hmax = hmax_for(B0, INS, r, cur_U())
             if hmax < 0: log(f"  {tag} r={r}: no stratum can improve on U (bound); skipped"); state["done"].append(key); save(); continue
             if run_instance(tag, B0, INS, r, hmax): state["done"].append(key)
+            else: state["failed"] = state.get("failed", 0) + 1
             save()
-    state["status"] = "complete"; save()
+    state["status"] = "complete" if not state.get("failed") else f"INCOMPLETE ({state['failed']} instances failed)"; save()
     log("DONE", state["status"], "best_digits_seen:", state["best_digits_seen"], "incumbent improved:", state["incumbent"] is not None)
 
 if __name__ == "__main__": main()
