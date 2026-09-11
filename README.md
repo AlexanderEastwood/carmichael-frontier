@@ -16,8 +16,10 @@ built to help push the frontier past the current record — and used here to fin
 > cofactor minimum transfers to the next factor count: **S₆₅ ∈ [10¹⁴⁸, U₆₅] — 149, 150, or 151
 > digits** (lower bound reproduced four ways in [`s65/`](s65/); upper bound U₆₅ = Webster's 151-digit
 > candidate, independently factored over the proven ≤2.27M universe and oracle-verified). These are
-> global bounds on the minima — **not** determinations of them. Full write-up: [`INTERVAL_THEOREM.md`](INTERVAL_THEOREM.md) and
-> [`paper/interval_theorem.tex`](paper/interval_theorem.tex).
+> global bounds on the minima — **not** determinations of them. The cofactor bound generalizes to
+> the whole ladder: [`ladder/LADDER_TABLE.md`](ladder/LADDER_TABLE.md) gives a certified interval
+> `C_k(97) ≤ A_k ≤ S_k ≤ U_k` for **every k = 64…144** (81 rows, all U_k oracle-verified). Full
+> write-up: [`INTERVAL_THEOREM.md`](INTERVAL_THEOREM.md) and [`paper/interval_theorem.tex`](paper/interval_theorem.tex).
 
 Everything here is our own code, developed beside — not committed to — Jonathan Webster's
 [`small-carmichael-numbers`](https://github.com/jewebste/small-carmichael-numbers), whose
