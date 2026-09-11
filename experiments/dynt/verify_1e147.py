@@ -21,10 +21,19 @@ REPLACED = {  # prefixes that were sub-partitioned (their subtrees are covered b
     "11", "17", "31", "19,23,29", "19,23,31", "19,29,31", "19,31,37", "19,31,41",                        # finish_1e147 (laggards)
     "19,23,31,37", "19,29,31,37", "19,29,31,41", "19,31,37,41", "19,31,41,43",                           # finish2 (quads)
     "19,23,31,37,41", "19,29,31,37,41", "19,29,31,41,43", "19,31,37,41,43", "19,31,41,43,47",             # finish3 (depth 5)
-    "19,23,31,37,41,43", "19,29,31,37,41,43", "19,29,31,41,43,47", "19,31,37,41,43,47", "19,31,41,43,47,53",  # finish4 (depth 6)
+    "19,23,31,37,41,43", "19,29,31,37,41,43", "19,29,31,41,43,47", "19,31,37,41,43,47", "19,31,41,43,47,53",  # finish4 (depth 6 -> 8)
+    "19,31,41,43,47,53,59,61", "19,23,31,37,41,43,53,59", "19,31,37,41,43,47,53,59",                              # finish5 (depth 8 -> 9)
+    "19,31,37,41,43,47,59,61", "19,29,31,37,41,43,47,53",
+    "19,23,31,37,41,43,53,59,61", "19,29,31,37,41,43,47,53,61", "19,31,37,41,43,47,53,59,61",              # finish6 (depth 9 -> 10)
+    "19,31,37,41,43,47,59,61,67", "19,31,41,43,47,53,59,61,67",
+    "19,23,31,37,41,43,53,59,61,67", "19,29,31,37,41,43,47,53,61,67", "19,31,37,41,43,47,53,59,61,67",  # finish7 (depth 10 -> 11)
+    "19,31,37,41,43,47,59,61,67,71", "19,31,41,43,47,53,59,61,67,71",
 }
 leaves = set()
-for lst in ("JOBS", "SUBJOBS", "SUBJOBS2", "SUBJOBS3", "SUBJOBS4"):
+# SUBJOBS7 (depth 11, unpruned) was superseded: the 5 depth-10 chain prefixes are covered by the
+# feasibility-pruned persistent frontier SUBJOBS8 (depth 14). SUBJOBS7's completed leaves remain on
+# disk as extras (still scanned for hits) but are not part of the coverage set.
+for lst in ("JOBS", "SUBJOBS", "SUBJOBS2", "SUBJOBS3", "SUBJOBS4", "SUBJOBS5", "SUBJOBS6", "SUBJOBS8"):
     p = os.path.join(JD, lst)
     if os.path.exists(p):
         for line in open(p):
