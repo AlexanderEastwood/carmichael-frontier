@@ -255,7 +255,10 @@ def main():
     for tag in BASES:
         if tag == "ksmall": bases.append(("ksmall", sorted(P)[:K]))
         elif tag == "S64":
-            b = [p for p in U0_factors if p in Pset]; extra = [p for p in sorted(P) if p not in set(b)]
+            bf = U0_factors
+            if os.environ.get("BASE_JSON"):      # benchmark/experiments: derive the S64 base from another incumbent's factors
+                bf = sorted(int(p) for p in json.load(open(os.environ["BASE_JSON"]))["factors"]); log(f"S64 base from {os.environ['BASE_JSON']}")
+            b = [p for p in bf if p in Pset]; extra = [p for p in sorted(P) if p not in set(b)]
             bases.append(("S64", sorted(b + extra[:K - len(b)])))
     log(f"M={M} pool<{INS_PRIME_CAP}: {len(P)} eligible primes; bases={[t for t,_ in bases]}; radii {R_MIN}..{R_MAX}; SPLIT={SPLIT}; U={len(str(cur_U()))} digits")
     save()
