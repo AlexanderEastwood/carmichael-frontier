@@ -44,12 +44,13 @@ leaves -= REPLACED
 # workers AND had idle cores donated to their feasibility-pruned +4 children. Either verdict covers
 # the slice: its own n=NONE, or n=NONE on every one of its SUBJOBS9 children.
 ALT = {}
-p9 = os.path.join(JD, "SUBJOBS9")
-if os.path.exists(p9):
-    for line in open(p9):
-        s = line.strip()
-        if not s: continue
-        ALT.setdefault(",".join(s.split(",")[:14]), []).append(s)
+for lst, depth in (("SUBJOBS9", 14), ("SUBJOBS10", 18)):      # donated frontiers: parent depth -> children list
+    pl = os.path.join(JD, lst)
+    if os.path.exists(pl):
+        for line in open(pl):
+            s = line.strip()
+            if not s: continue
+            ALT.setdefault(",".join(s.split(",")[:depth]), []).append(s)
 # Secondary verdict source: duplicate runs of the same prefix/bound with a different DYNT_KMAX (a
 # performance knob under the completeness invariant), written OUTSIDE jobs_1e147 so they never clash
 # with a still-running primary worker's open file. A HIT anywhere always wins over NONE.
@@ -66,17 +67,23 @@ def verdict(pfx):
     if "HIT" in vs: return "HIT"
     if "NONE" in vs: return "NONE"
     return "BAD" if "BAD" in vs else "MISSING"
+def covered(pfx):
+    """'NONE' if pfx's own verdict is NONE or (recursively) every donated child is covered; 'HIT' if any hit; else a status."""
+    v = verdict(pfx)
+    if v in ("NONE", "HIT"): return v
+    if pfx in ALT:
+        cv = [(c, covered(c)) for c in ALT[pfx]]
+        if any(x == "HIT" for _, x in cv): return "HIT"
+        if all(x == "NONE" for _, x in cv): return "NONE_VIA_CHILDREN"
+        return f"{v}; children unfinished {sum(1 for _, x in cv if x not in ('NONE', 'NONE_VIA_CHILDREN'))}/{len(cv)}"
+    return v
 missing, bad, hits, none, via_children = [], [], [], 0, 0
 for pfx in sorted(leaves):
-    v = verdict(pfx)
+    v = covered(pfx)
     if v == "NONE": none += 1; continue
+    if v == "NONE_VIA_CHILDREN": none += 1; via_children += 1; continue
     if v == "HIT": hits.append(pfx); continue
-    if pfx in ALT:  # own run unfinished: accept full coverage by the donated children instead
-        cv = [(c, verdict(c)) for c in ALT[pfx]]
-        if all(x == "NONE" for _, x in cv): none += 1; via_children += 1; continue
-        ch = [c for c, x in cv if x == "HIT"]
-        if ch: hits.extend(ch); continue
-        missing.append(f"{pfx} (own {v}; children unfinished {sum(1 for _, x in cv if x != 'NONE')}/{len(cv)})"); continue
+    if pfx in ALT: missing.append(f"{pfx} (own {v})"); continue
     (missing if v == "MISSING" else bad).append(pfx)
 # any hit in ANY verdict file (belt and braces, including replaced prefixes' partial runs)
 extra_hits = []
