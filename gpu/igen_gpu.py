@@ -89,7 +89,7 @@ def generate_chunks(INS, r, M, P0, Icap, split=None, hmax=None, max_records=200_
     """Yield (keys, ids) cupy uint64 chunks (each <= max_records unless a single first index exceeds it)
     covering exactly the filtered r-subsets of INS. Total count is available as the generator's return
     value via StopIteration.value; simpler: use generate() for small instances."""
-    n = len(INS); assert 3 <= r <= 8 and n <= 1024 and M < (1 << 62)
+    n = len(INS); assert 3 <= r <= 8 and n <= 1024 and M < (1 << 64)   # 128-bit mulmod is exact for any M < 2^64; residue keys are unique u64
     assert all(INS[i] < INS[i + 1] for i in range(n - 1)), "INS must be strictly ascending"
     if Icap <= 1: return 0
     lp = np.array([math.log2(p) for p in INS], dtype=np.float64)
