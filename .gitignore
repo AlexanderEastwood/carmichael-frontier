@@ -27,3 +27,6 @@ run_k*.log
 checkpoint_k*.json
 *.tmp
 .DS_Store
+
+# frozen artifact archive (2026-09-11): tarballs + pulled run logs, not for git
+archive/
