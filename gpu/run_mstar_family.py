@@ -23,7 +23,8 @@ def pool(D, cap):
         q += 2
     return out
 def main() -> None:
-    fam = json.load(open(os.path.join(HERE, "mstar_divisor_family.json")))
+    fam = json.load(open(os.environ.get("FAMILY_JSON", os.path.join(HERE, "mstar_divisor_family.json"))))
+    if isinstance(fam, dict): fam = fam["survivors"]          # divisor_family_census.py format
     inc = json.load(open(os.path.join(FR, "results_k64_best_global.json"))); U = int(inc["n"])
     todo = [r for r in fam if r["s"] > S_MAX_SKIP]
     if os.environ.get("S_ONLY_LE"):                      # e.g. S_ONLY_LE=3: the 23 neighbourhood moduli at ALL feasible radii, full capped pools

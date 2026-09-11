@@ -28,27 +28,28 @@ authoritative reference for the known values and the neighbours cited below.
 
 ## The k = 64 interval
 
-**Upper bound — a 148-digit incumbent** (improves the earlier 149-digit candidate), the product of
-64 distinct primes (largest **1249**; found by the GPU exchange search at r=8, improving the
-previous 148-digit incumbent by a factor of 1.605):
+**Upper bound — a 148-digit incumbent** found by **Jonathan Webster's** CPU search (communicated
+2026-09-11, independently factored and oracle-verified here), the product of 64 distinct primes
+(largest **1579**):
 
 ```
-19·29·31·37·41·43·47·53·61·67·71·73·79·89·97·101·103·109·113·127·131·137·139·151·157·163·167·181·193·197·199·211·239·241·251·257·271·281·307·313·331·337·353·379·397·401·409·421·433·461·487·541·547·577·601·613·617·673·751·769·859·967·1051·1249
+19·29·31·37·41·43·47·53·61·67·71·73·79·89·97·101·103·109·113·127·131·139·151·157·163·167·181·193·197·199·211·239·241·251·257·271·277·281·307·313·331·337·353·379·397·409·421·433·443·449·463·499·521·547·577·599·601·617·631·641·691·769·1249·1579
 ```
 
 - Value + metadata in [`results_k64_best_global.json`](results_k64_best_global.json)
-  (modulus `1768248177696000`). **Re-derive it by multiplying the factor list — don't trust a
+  (`λ(N) = 155016423578016000`). **Re-derive it by multiplying the factor list — don't trust a
   pasted decimal.** `ref/ref_carmichael.py::verify_certificate` confirms squarefree, 64 distinct
   primes (independent Miller–Rabin), Korselt `(p−1)|(N−1)` for every `p`; `10^147 ≤ N < 10^148`.
 - Sits between Webster's neighbours `N₆₃` (145 digits) and the `N₆₅` candidate (151), where a true
   `S₆₄` must lie. Still an **upper bound**, not a certified minimum. What *is* certified (2026-09-11):
-  **`N` is the least 64-factor Carmichael number whose `λ(n)` divides `M = λ(N) = 1768248177696000`** —
-  an exact search of all 111 divisors `D | M` that can carry one (own 64-smallest base, every
-  size-feasible radius up to 14, full product-bounded pools, `n ≡ 1 mod D`), 684 exchange instances plus
-  111 base checks, 0 below `N`; record counts cross-checked against an independent enumeration. The heuristic exchange search
-  (radius ≤ 8 over 401 portfolio moduli, radius ≤ 10 over the 23-modulus neighbourhood of `M`) also
-  found nothing below `N`. See the restricted-minimum section of
-  [`INTERVAL_THEOREM.md`](INTERVAL_THEOREM.md) and [`gpu/mstar_divisor_family.json`](gpu/mstar_divisor_family.json).
+  **`N` is the least 64-factor Carmichael number whose `λ(n)` divides `λ(N)`**, and our own GPU-found
+  incumbent **`N₀` = 1.0295·`N`** (largest prime 1249, `λ(N₀) = M₀ = 1768248177696000`, kept as
+  `results_k64_best_global_prev_148_539839443357.json`) is the least with `λ(n) | M₀` — exact searches of
+  every divisor modulus that can carry one (118 resp. 111 moduli; own 64-smallest base, every size-feasible
+  radius ≤ 14, full product-bounded pools, `n ≡ 1 mod D`), nothing below the bound; record counts at `M₀`
+  cross-checked against an independent enumeration. Every smaller 64-factor Carmichael number must have a
+  prime `q` with `(q−1) ∤ λ(N)`. See the restricted-minima section of
+  [`INTERVAL_THEOREM.md`](INTERVAL_THEOREM.md), [`gpu/divisor_family_census.py`](gpu/divisor_family_census.py).
 - The original 149-digit candidate and its full write-up remain in
   [`results_k64.json`](results_k64.json) / [`RESULTS_k64.md`](RESULTS_k64.md).
 

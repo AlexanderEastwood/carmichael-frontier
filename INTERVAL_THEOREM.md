@@ -16,33 +16,35 @@ Everything below is at repository revision `f872e32`.
 
 ---
 
-## Upper bound — a 148-digit incumbent (improves the earlier 149-digit candidate)
+## Upper bound — a 148-digit incumbent (J. Webster, 2026-09-11; verified here)
 
-`N` is the product of these 64 distinct primes (largest is **1249**):
+`N` is the product of these 64 distinct primes (largest is **1579**):
 
 ```
-19·29·31·37·41·43·47·53·61·67·71·73·79·89·97·101·103·109·113·127·131·137·139·151·157·163·167·181·193·197·199·211·239·241·251·257·271·281·307·313·331·337·353·379·397·401·409·421·433·461·487·541·547·577·601·613·617·673·751·769·859·967·1051·1249
+19·29·31·37·41·43·47·53·61·67·71·73·79·89·97·101·103·109·113·127·131·139·151·157·163·167·181·193·197·199·211·239·241·251·257·271·277·281·307·313·331·337·353·379·397·409·421·433·443·449·463·499·521·547·577·599·601·617·631·641·691·769·1249·1579
 ```
 
 - **Re-derive `N` by multiplying the factor list** — don't trust a pasted decimal. Value + metadata
   in [`results_k64_best_global.json`](results_k64_best_global.json).
-- **Verification.** Every factor is `≤ 1249`, so its primality is certified by exact trial division
+- **Verification.** Every factor is `≤ 1579`, so its primality is certified by exact trial division
   (deterministic at this size). Squarefree, 64 distinct primes, and Korselt `(p−1)|(N−1)` for every
-  `p` — equivalently `λ(N) = lcm(p−1) = 1768248177696000` and `N ≡ 1 (mod λ(N))`. `10^147 ≤ N < 10^148`.
+  `p` — equivalently `λ(N) = lcm(p−1) = 155016423578016000` and `N ≡ 1 (mod λ(N))`. `10^147 ≤ N < 10^148`.
   Checked by `ref/ref_carmichael.py::verify_certificate` (shares no code with the search).
-- **Found** by the GPU exchange meet-in-the-middle at radius **r=8** (`gpu/mitm_gpu_r8_driver.py`; the
-  CPU engine is limited to r≤7) at search modulus `M = 1768248177696000` — for this `N`, `M = λ(N)`
-  and `N ≡ 1 mod M`. Improves the previous 148-digit incumbent (largest prime 3697, r=7, kept as
-  `results_k64_best_global_prev_148_N.json`) by a factor of **1.605**. An **upper bound**, not a
-  certified minimum.
+- **Found by Jonathan Webster** (Butler University) with his CPU search, communicated 2026-09-11 and
+  independently factored + oracle-verified here. **An upper bound, not a certified minimum.**
+- **Our own best incumbent `N₀`** (148 digits, largest prime 1249, `λ(N₀) = M₀ = 1768248177696000`,
+  `N₀/N = 1.0295`; shares 53 primes with `N`) was found by the GPU exchange meet-in-the-middle at radius
+  **r=8** (`gpu/mitm_gpu_r8_driver.py`) at modulus `M₀`; it is kept as
+  [`results_k64_best_global_prev_148_539839443357.json`](results_k64_best_global_prev_148_539839443357.json)
+  and had improved the earlier 148-digit incumbent (largest prime 3697, r=7) by a factor 1.605.
 - Consistent with the neighbours *by digit length + the proved interval*, not by any general
   monotonicity of `Sₖ`: Webster's `N₆₃` has 145 digits (so `N₆₃ < 10^145 ≤ S₆₄`) and the `N₆₅`
   candidate has 151 digits (so it exceeds `N`). The original 149-digit candidate is in
   [`results_k64.json`](results_k64.json) / [`RESULTS_k64.md`](RESULTS_k64.md).
 
-### A restricted minimum: `N` is the least 64-factor Carmichael number with `λ(n) | M` (2026-09-11)
+### Restricted minima: `N₀` is the least 64-factor Carmichael number with `λ(n) | M₀`, and `N` the least with `λ(n) | λ(N)` (2026-09-11)
 
-Write `M = λ(N) = 2⁸·3⁵·5³·7²·11·13·17·23·83 = 1768248177696000`. Every Carmichael number `n` with
+Write `M₀ = λ(N₀) = 2⁸·3⁵·5³·7²·11·13·17·23·83 = 1768248177696000` (below, read `N` as `N₀` and `M` as `M₀` in this paragraph). Every Carmichael number `n` with
 exactly 64 prime factors and `λ(n) | M` has `λ(n) = D` for some divisor `D` of `M`, all its primes `q`
 in `Q(D) = {q prime : (q−1) | D, q ∤ D}` (for a Carmichael number `q | λ(n)` is impossible), and
 `n ≡ 1 (mod D)`. Of the 20 736 divisors of `M`, only **111** have a `Q(D)` whose 64 smallest primes
@@ -53,7 +55,7 @@ We searched every one of the 111 moduli exactly — its own 64-smallest base, ev
 the full product-bounded pool, the exact deletion/insertion product bounds, and the residue join
 `n ≡ 1 (mod D)` — and found **no 64-factor Carmichael number below `N`**. Hence
 
-> **`N` is the smallest Carmichael number with exactly 64 prime factors whose Carmichael function divides `M`.**
+> **`N₀` is the smallest Carmichael number with exactly 64 prime factors whose Carmichael function divides `M₀`.**
 
 This is a restricted minimum over the family `λ(n) | M`, *not* a determination of `S₆₄`: a smaller
 64-factor Carmichael number would have to have a `λ` that does not divide `M`. Data:
@@ -69,7 +71,15 @@ independently with the same negative result; the pipeline rediscovers `N` from t
 radius 8 when the bound is frozen at the previous incumbent. 684 exchange instances (Σ_D r_max(D)) plus
 111 direct base checks, 0 incomplete. **Corollary (certified):** every 64-factor Carmichael number `n < N`
 has a prime factor `q` with `(q−1) ∤ M` — a filter for any future incumbent search: an instance whose entire
-affordable pool satisfies `(q−1) | M` cannot improve on `N`.
+affordable pool satisfies `(q−1) | M₀` cannot improve on `N₀`.
+
+Webster's `N` illustrates the corollary: exactly one of its primes, 1579 (1578 = 2·3·263), has `(q−1) ∤ M₀`,
+and `λ(N) = M₀·263/3 = 155016423578016000`. The same census and exact search were then run for `N` itself
+(`gpu/divisor_family_census.py` → [`gpu/divisor_family_lambdaJ.json`](gpu/divisor_family_lambdaJ.json)):
+`λ(N)` has 34 560 divisors, 118 survivors (`r_max ≤ 13`), all 118 searched in full — 728 exchange instances plus
+118 base checks, none incomplete, **no completion below `N`**. Hence **`N` is the least 64-factor Carmichael number
+with `λ(n) | λ(N)`**, and every 64-factor Carmichael number below `N` has a prime `q` with `(q−1) ∤ λ(N)` and a
+prime `q′` with `(q′−1) ∤ M₀`. Both are restricted minima over a divisor family, not determinations of `S₆₄`.
 
 ## Lower bound — no 64-factor Carmichael below 10¹⁴⁵ (finite exhaustion)
 
