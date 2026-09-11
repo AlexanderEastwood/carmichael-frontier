@@ -1,0 +1,9 @@
+k=64
+n=NONE
+FACTORS:
+nfactors=0
+N_E=22364809 N_I=10979089 N_F=202600 N_H=111468 N_G=0
+survivor_frac=0
+dynt_kmax=0 freeze=0 completions=0 min_completion=0 max_R_bits=93
+wall_s=71.1837 t_enum_s=70.6456 t_first_s=0.040733 t_fermat_s=0.497327 t_deep_s=0
+frac_enum=0.992441 frac_first=0.000572224 frac_fermat=0.00698653 frac_deep=0
