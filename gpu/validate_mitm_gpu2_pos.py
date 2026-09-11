@@ -18,7 +18,9 @@ import mitm_gpu2 as G
 import cupy as cp
 
 BIN = os.path.join(FR, "src", "mitm64_r7"); NINS = int(os.environ.get("NINS", "30"))
-inc = json.load(open(os.path.join(FR, "results_k64_best_global.json")))
+# Pinned to the PREVIOUS 148-digit incumbent (r=7 from ksmall) so this stays an r=7 test that fits
+# single-shot on the GPU; the current best_global (N', r=8) would need the chunk-resident driver path.
+inc = json.load(open(os.path.join(FR, "results_k64_best_global_prev_148_N.json")))
 M = int(inc["modulus"]); N = int(inc["n"]); Nf = sorted(int(p) for p in inc["factors"])
 def pool(M, cap):
     out = []; q = 3
