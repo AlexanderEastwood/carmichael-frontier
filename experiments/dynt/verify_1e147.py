@@ -50,13 +50,22 @@ if os.path.exists(p9):
         s = line.strip()
         if not s: continue
         ALT.setdefault(",".join(s.split(",")[:14]), []).append(s)
-def verdict(pfx):
-    f = os.path.join(JD, pfx.replace(",", "_") + ".out")
+# Secondary verdict source: duplicate runs of the same prefix/bound with a different DYNT_KMAX (a
+# performance knob under the completeness invariant), written OUTSIDE jobs_1e147 so they never clash
+# with a still-running primary worker's open file. A HIT anywhere always wins over NONE.
+ALT_DIRS = [os.path.expanduser("~/kmax0_dup")]
+def _read_verdict(f):
     if not os.path.exists(f): return "MISSING"
     txt = open(f, errors="replace").read()
     if "\nn=NONE\n" in txt or txt.startswith("n=NONE") or "\nn=NONE" in txt: return "NONE"
     if any(l.startswith("n=") and l[2:3].isdigit() for l in txt.splitlines()): return "HIT"
     return "BAD"
+def verdict(pfx):
+    name = pfx.replace(",", "_") + ".out"
+    vs = [_read_verdict(os.path.join(JD, name))] + [_read_verdict(os.path.join(d, name)) for d in ALT_DIRS]
+    if "HIT" in vs: return "HIT"
+    if "NONE" in vs: return "NONE"
+    return "BAD" if "BAD" in vs else "MISSING"
 missing, bad, hits, none, via_children = [], [], [], 0, 0
 for pfx in sorted(leaves):
     v = verdict(pfx)
