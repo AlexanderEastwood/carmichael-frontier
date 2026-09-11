@@ -17,7 +17,7 @@ plus provenance (seed, q, j, p), sorted by digits_T64 then rmax -- richest pools
 
 usage: python3 lambda_neighbourhood.py --seeds M1,M2 --pmax 3000 --out nbhd.json [--procs N]
 """
-import argparse, json, os, sys
+import argparse, json, os, sys, math
 from math import isqrt
 from multiprocessing import Pool as MPPool
 HERE = os.path.dirname(os.path.abspath(__file__)); FR = os.path.dirname(HERE)
@@ -46,6 +46,42 @@ def pool(D, fm):
         q = d + 1
         if 3 <= q <= SIEVE_BOUND and D % q != 0 and _S[q]: out.append(q)
     return sorted(out)
+def pool_relaxed(fm):
+    """{q prime : (q-1) | D} WITHOUT the coprimality condition -- monotone under divisibility of D, so it is a
+    valid (weaker) pool for pruning descendants (Astra 2026-09-11: Q(D) itself is not monotone, e.g. 3 in Q(80)
+    but not in Q(240))."""
+    out = []
+    for d in divisors_of(fm):
+        q = d + 1
+        if 3 <= q <= SIEVE_BOUND and _S[q]: out.append(q)
+    return sorted(out)
+def relaxed_survives(fm, U):
+    """False only if even the relaxed pool cannot produce a 64-product below U (then no divisor can either)."""
+    P = pool_relaxed(fm)
+    if len(P) < 64:
+        lb = 1
+        for p in P: lb *= p
+        return lb * (SIEVE_BOUND + 1) ** (64 - len(P)) < U
+    T64 = 1
+    for p in P[:64]: T64 *= p
+    return T64 < U
+def two_witness_min(P, U, M0, LN):
+    """Exact minimum 64-product from pool P containing a prime q with (q-1) ∤ M0 AND a prime q' with (q'-1) ∤ LN
+    (Theorems 2-3: every 64-factor Carmichael below N has both). Returns (digits, product) or None if impossible."""
+    E0 = [q for q in P if M0 % (q - 1) != 0]; EN = [q for q in P if LN % (q - 1) != 0]
+    both = [q for q in P if M0 % (q - 1) != 0 and LN % (q - 1) != 0]
+    best = None
+    def fill(req):
+        rest = [q for q in P if q not in req]
+        if len(rest) < 64 - len(req): return None
+        v = 1
+        for q in req + rest[:64 - len(req)]: v *= q
+        return v
+    if both: v = fill([both[0]]); best = v if best is None or (v is not None and v < best) else best
+    e0 = [q for q in E0 if LN % (q - 1) == 0]; en = [q for q in EN if M0 % (q - 1) == 0]
+    if e0 and en:
+        v = fill(sorted([e0[0], en[0]])); best = v if best is None or (v is not None and v < best) else best
+    return best
 def census_row(D, fm, U, Ufactors):
     P = pool(D, fm)
     if len(P) < 64:
@@ -83,10 +119,11 @@ def survivors_with_p(Mp_fm, p, U, Ufactors):
         key = tuple(vec)
         if key in seen: return seen[key]
         D = D_of(vec); fm = {q: e for q, e in zip(primes, vec) if e} ; fm[p] = 1
+        if not relaxed_survives(fm, U): seen[key] = False; return False      # sound prune: monotone relaxed pool
         row = census_row(D, fm, U, Ufactors)
-        if row is None: seen[key] = False; return False
-        if isinstance(row, tuple): problems.append(row); seen[key] = True; return True
-        seen[key] = True; out.append(row)
+        seen[key] = True
+        if isinstance(row, tuple): problems.append(row)
+        elif row is not None: out.append(row)
         for i in range(len(vec)):
             if vec[i] > 0:
                 v2 = list(vec); v2[i] -= 1; rec(v2)
@@ -105,6 +142,7 @@ def work(args):
             fm = dict(seed_fm); fm[q] = e - j
             if fm[q] == 0: del fm[q]
             variants.append((q, j, fm))
+        fm = dict(seed_fm); fm[q] = e + 1; variants.append((q, -1, fm))      # exponent increase (j = -1)
     for q, j, fm in variants:
         fm2 = dict(fm); fm2[p] = 1
         out, prob = survivors_with_p(fm2, p, U, Ufactors); problems += prob
@@ -128,9 +166,19 @@ def main():
             for D, row in r.items():
                 if D in covered: continue
                 if D not in rows or row["digits_T64"] < rows[D]["digits_T64"]: rows[D] = row
-    out = sorted(rows.values(), key=lambda r: (r["digits_T64"], -r["rmax"], r["D"]))
+    # exact two-witness filter (Theorems 2-3): drop moduli whose cheapest qualifying 64-product is >= U
+    global _S
+    if _S is None: _S = sieve(SIEVE_BOUND)
+    M0 = 1768248177696000; LN = 155016423578016000; kept = []
+    for row in rows.values():
+        D = row["D"]; fm = factor(D); P = [q for q in pool(D, fm) if q <= row["cap"]]
+        w = two_witness_min(P, U, M0, LN)
+        if w is None or w >= U: continue
+        row["w2_digits"] = len(str(w))
+        kept.append(row)
+    out = sorted(kept, key=lambda r: (r["w2_digits"], r["digits_T64"], -r["rmax"], r["D"]))
     json.dump({"U": str(U), "seeds": [str(m) for m in seeds], "pmax": a.pmax, "sieve_problems": problems[:50], "survivors": out}, open(a.out, "w"), indent=1)
-    print(f"seeds={seeds} pmax={a.pmax}: new survivor moduli={len(out)}; sieve-bound problems={len(problems)}")
+    print(f"seeds={seeds} pmax={a.pmax}: new survivor moduli={len(rows)}; after two-witness filter={len(out)}; sieve-bound problems={len(problems)}")
     for r in out[:25]: print(r["D"], "p=%d q=%s j=%d" % (r["p"], r["q"], r["j"]), "T64 digits", r["digits_T64"], "pool", r["pool_capped"], "rmax", r["rmax"], "s", r["s"])
     print("rmax distribution:", {k: sum(1 for r in out if r["rmax"] == k) for k in sorted(set(r["rmax"] for r in out))})
 
