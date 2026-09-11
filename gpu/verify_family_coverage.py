@@ -16,12 +16,13 @@ def main() -> None:
     fam = json.load(open(fam_path)); fam = fam["survivors"] if isinstance(fam, dict) else fam
     U_exp = int(sys.argv[3]) if len(sys.argv) > 3 and sys.argv[3] != "-" else None
     rcap = int(sys.argv[4]) if len(sys.argv) > 4 else None      # discovery passes: certify coverage only up to this radius
-    problems = []; hits = []; radii_total = 0
+    problems = []; hits = []; radii_total = 0; unsupported = []
     for row in fam:
         D, rmax = int(row["D"]), int(row["rmax"]); f = os.path.join(rec_dir, f"D{D}.log")
         if rcap is not None: rmax = min(rmax, rcap)
         if not os.path.exists(f): problems.append(f"D={D}: record missing"); continue
         txt = open(f, errors="replace").read(); lines = txt.splitlines()
+        if "[runner] UNSUPPORTED: modulus >= 2^64" in txt: unsupported.append(D); continue     # reported separately, never counted as covered
         m = re.search(r"\[runner\] family=(\S+) D=(\d+) U=(\d+) pool=(\d+) cap=(\d+) rmax=(\d+)", txt)
         if not m: problems.append(f"D={D}: no runner header"); continue
         if int(m.group(2)) != D: problems.append(f"D={D}: header D mismatch")
@@ -47,11 +48,12 @@ def main() -> None:
             if "INCOMPLETE" in txt: problems.append(f"D={D}: INCOMPLETE instance(s)")
             if "DONE complete" not in txt: problems.append(f"D={D}: driver did not end with DONE complete")
         if "NEW BEST" in txt: hits.append(f"D={D}: NEW BEST")
-    print(f"family={os.path.basename(fam_path)} moduli={len(fam)} exchange_instances_expected={radii_total}{f' (radii capped at {rcap}: DISCOVERY coverage only)' if rcap is not None else ''} problems={len(problems)} hits={len(hits)}")
+    print(f"family={os.path.basename(fam_path)} moduli={len(fam)} exchange_instances_expected={radii_total}{f' (radii capped at {rcap}: DISCOVERY coverage only)' if rcap is not None else ''} problems={len(problems)} hits={len(hits)} unsupported_ge_2^64={len(unsupported)}")
+    if unsupported: print(f"NOTE {len(unsupported)} moduli >= 2^64 were NOT searched (u64 residue keys); coverage below excludes them")
     for p in problems[:30]: print("PROBLEM", p)
     for h in hits: print("HIT", h)
     ok = not problems and not hits
-    print("RESULT=" + ("FAMILY_COVERED" if ok else ("HIT_FOUND" if hits and not problems else "NOT_COVERED")))
+    print("RESULT=" + (("FAMILY_COVERED" if not unsupported else "FAMILY_COVERED_EXCEPT_UNSUPPORTED") if ok else ("HIT_FOUND" if hits and not problems else "NOT_COVERED")))
     sys.exit(0 if ok else 1)
 
 if __name__ == "__main__": main()

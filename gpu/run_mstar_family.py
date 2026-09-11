@@ -53,7 +53,7 @@ def main() -> None:
     if os.environ.get("FAM_SHARD"):                      # FAM_SHARD=i/n : this runner takes rows with index % n == i
         i, n = (int(x) for x in os.environ["FAM_SHARD"].split("/")); todo = [r for k, r in enumerate(todo) if k % n == i]
     log(f"family {FAM_TAG}: {len(fam)} survivors; running {len(todo)}; U={len(str(U))} digits (U_OVERRIDE={'yes' if os.environ.get('U_OVERRIDE') else 'no'}); records {rec_dir}")
-    n_r0 = 0; n_hit = 0; failures = []; skipped = 0
+    n_r0 = 0; n_hit = 0; failures = []; skipped = 0; unsupported = 0
     done_dirs = [d for d in os.environ.get("FAM_DONE_DIRS", "").split(",") if d]   # FAM_SKIP_DONE=1: skip moduli already complete there
     def already_done(D):
         for d in done_dirs:
@@ -67,6 +67,10 @@ def main() -> None:
         D, cap, rmax = int(row["D"]), int(row["cap"]), int(row["rmax"])
         if os.environ.get("FAM_SKIP_DONE") == "1" and already_done(D): skipped += 1; continue
         if DEADLINE and dt.datetime.now(dt.timezone.utc) > DEADLINE: log("DEADLINE reached; stopping"); failures.append(("deadline", D)); break
+        if D >= (1 << 64):                                   # residue keys are u64 on every path: not searchable yet
+            with open(os.path.join(rec_dir, f"D{D}.log"), "w") as out:
+                out.write(f"[runner] family={FAM_TAG} D={D} U={U} pool=? cap={cap} rmax={rmax}\n[runner] UNSUPPORTED: modulus >= 2^64 (u64 residue keys); not searched\n")
+            log(f"D={D} s={row['s']} rmax={rmax}: UNSUPPORTED (modulus >= 2^64), not searched"); unsupported += 1; continue
         P = pool(D, cap); assert len(P) == row["pool_capped"], (D, len(P), row["pool_capped"])
         base = P[:64]; ok, n, _ = ref.verify_certificate(base); n_r0 += 1
         lf = os.path.join(rec_dir, f"D{D}.log")
@@ -94,6 +98,6 @@ def main() -> None:
         if "NEW BEST" in txt: n_hit += 1; log(f"*** NEW BEST at D={D} -> gpu/results_k64_gpu_mstar_fam_{FAM_TAG}.json ***")
     if failures:
         log(f"FAMILY PASS INCOMPLETE: {len(failures)} failures: {failures[:10]}"); sys.exit(1)
-    log(f"family pass finished: moduli={len(todo)} skipped_done={skipped} r0_checked={n_r0} hits={n_hit} records={rec_dir}")
+    log(f"family pass finished: moduli={len(todo)} skipped_done={skipped} unsupported_ge_2^64={unsupported} r0_checked={n_r0} hits={n_hit} records={rec_dir}")
 
 if __name__ == "__main__": main()
