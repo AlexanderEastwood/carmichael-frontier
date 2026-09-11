@@ -4,9 +4,11 @@
 
 $$10^{145} \;\le\; S_{64} \;\le\; N \;<\; 10^{148},$$
 
-so **S₆₄ has 146, 147, or 148 decimal digits**, and the remaining exclusion interval is
-`[10^145, N)`. Here `N` is an explicit, oracle-verified 148-digit Carmichael number with exactly 64
-prime factors. This is a global statement about `S₆₄` — *not* a determination of it (that would
+so **S₆₄ has 146, 147, or 148 decimal digits** (triple-verified core), and the remaining exclusion
+interval is `[10^145, N)`. Here `N` is an explicit, oracle-verified 148-digit Carmichael number with
+exactly 64 prime factors. A search-engine strengthening (below) excludes everything `≤ 10^146`, so
+in fact **S₆₄ has 147 or 148 digits** — see the verification tiering in
+[Strengthening](#strengthening--no-64-factor-carmichael--10¹⁴⁶-2026-09-11). This is a global statement about `S₆₄` — *not* a determination of it (that would
 require excluding every 64-factor Carmichael in `[10^145, N)`).
 
 Full write-up with proofs: [`paper/interval_theorem.tex`](paper/interval_theorem.tex) (5-page PDF).
@@ -84,13 +86,32 @@ during descent and discards no genuine Carmichael. There are exactly **127,092**
 Commands: `python3 s64_lower_bound_certificate.py` · `python3 carmichael_prime_bound.py --X 1e145 --pi`
 · `python3 s64_lower_bound_oracle_check.py`.
 
+## Strengthening — no 64-factor Carmichael ≤ 10¹⁴⁶ (2026-09-11)
+
+A complete exact-k preproduct search (`experiments/dynt/`, the M2.5F production engine) over all
+64-factor products `≤ 10¹⁴⁶` returns **`n = NONE`**: no such Carmichael number exists. Hence
+
+$$10^{146} \;<\; S_{64} \;\le\; N, \qquad\text{so } S_{64}\text{ has } 147 \text{ or } 148 \text{ digits.}$$
+
+This is *far* cheaper than the ≥38.9-billion admissible-product **count** below 10¹⁴⁶, because the
+engine rejects prefixes (via the exact `R_min` bound and the `P·λ(P)>B` / AP switch) without
+materializing each product — the full search ran in ~71 s single-threaded.
+
+**Verification status (honest tiering).** The `S₆₄ ≥ 10¹⁴⁵` bound above is the rigorously
+triple-verified core (two certificate enumerators + a frozen-oracle-gated enumerator, plus the
+independently recomputed universe). The `> 10¹⁴⁶` strengthening currently rests on the **search
+engine**, corroborated by: (i) two independent switch strategies (production `P·λ>B` and the
+dynamic-t early switch) both returning `NONE`; and (ii) the same engine reproducing `NONE` at 10¹⁴⁵,
+where the result is independently certified — i.e. the engine is a *fourth* independent confirmation
+of the 10¹⁴⁵ bound before it is trusted at 10¹⁴⁶. A fully independent 10¹⁴⁶ certificate (an
+admissibility enumerator at that bound, oracle-gated) is the outstanding follow-up. The engine is
+also validated end-to-end against OEIS A006931: it reproduces `S_10 … S_29` exactly, oracle-confirmed.
+
 ## What's next
 
-**Completing** an exhaustive search at `Y = 10^146` would either surface a smaller Carmichael number
-or prove `S₆₄ ≥ 10^146`, narrowing the interval to **147–148 digits**. Measured (not extrapolated):
-at `10^146` the universe grows to 5605 odd primes and the admissible-product count to **≥ 38.9
-billion** — dominated (≈97.6%) by the smallest-prime-19 class — so this is a substantial partitioned
-computation, not a rerun. A capped, unfinished run establishes neither outcome.
+- **Independent 10¹⁴⁶ certificate** to raise `> 10¹⁴⁶` to the triple-verified tier.
+- Pushing toward 10¹⁴⁷ (each extra digit is ≈10⁵× more work) and, ultimately, the full `[…,N]`
+  certification that would prove `S₆₄ = N` — a machine-scale endgame (≈ thread-years), not a rerun.
 
 ## Provenance / credit
 

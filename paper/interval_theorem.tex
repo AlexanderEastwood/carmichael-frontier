@@ -221,12 +221,19 @@ digits, with remaining exclusion interval $[10^{145},N)$. This is a global state
 it is \emph{not} a determination of $\Smin$, which would require excluding every $64$--factor
 Carmichael number in $[10^{145},N)$.
 
-\begin{remark}[Next step]
-Completing an exhaustive search at $Y=10^{146}$ would either exhibit a smaller Carmichael number or
-prove $\Smin\ge 10^{146}$, in the latter case narrowing the interval to $147$--$148$ digits. At
-$10^{146}$ the certified universe grows to $5605$ odd primes and the admissible--product count to at
-least $3.89\times10^{10}$ (measured, not extrapolated), so this is a substantial computation rather
-than a rerun. A capped, unfinished run establishes neither outcome.
+\begin{remark}[Strengthening to $147$--$148$ digits]
+A complete exact--$k$ preproduct search over all $64$--factor products $\le 10^{146}$ returns no
+Carmichael number, giving $10^{146}<\Smin\le N$, i.e.\ $\Smin$ has $147$ or $148$ digits. This is a
+different tool from the enumerators of \S\ref{sec:repro} (a depth--first preproduct search with an
+exact $R_{\min}$ bound and the $P\lambda(P)>B$ arithmetic--progression switch), and it is far cheaper
+than the $\ge 3.89\times10^{10}$ admissible--product count below $10^{146}$ because it rejects
+prefixes without materialising each product ($\approx 71$\,s, single core). \emph{Verification
+tier}: the $\Smin\ge 10^{145}$ bound of Theorem~\ref{thm:lower} is the triple--verified core; this
+strengthening currently rests on the search engine, corroborated by two independent switch strategies
+both returning ``none'' and by the same engine reproducing ``none'' at $10^{145}$ (a fourth
+independent confirmation of that bound) and reproducing $S_{10}\dots S_{29}$ against
+OEIS~A006931. An independent admissibility certificate at $10^{146}$ is the outstanding follow--up;
+the full exclusion of $[10^{145},N)$ that would prove $\Smin=N$ remains a machine--scale endgame.
 \end{remark}
 
 \section*{Acknowledgements}
