@@ -66,7 +66,10 @@ record counts at `M` from the 64-smallest base for radii 4 and 9–14 (8 722 393
 r=4; 36 755 836 / 652 881 611 at r=9; 6 955 830 / 64 758 042 at r=11; 13 / 23 at r=14) agree exactly
 with an independent exact enumeration by GPT-6, which also ran the whole family
 independently with the same negative result; the pipeline rediscovers `N` from the 64-smallest base at
-radius 8 when the bound is frozen at the previous incumbent. 684 instances, 0 incomplete.
+radius 8 when the bound is frozen at the previous incumbent. 684 exchange instances (Σ_D r_max(D)) plus
+111 direct base checks, 0 incomplete. **Corollary (certified):** every 64-factor Carmichael number `n < N`
+has a prime factor `q` with `(q−1) ∤ M` — a filter for any future incumbent search: an instance whose entire
+affordable pool satisfies `(q−1) | M` cannot improve on `N`.
 
 ## Lower bound — no 64-factor Carmichael below 10¹⁴⁵ (finite exhaustion)
 

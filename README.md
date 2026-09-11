@@ -44,8 +44,8 @@ previous 148-digit incumbent by a factor of 1.605):
   `S₆₄` must lie. Still an **upper bound**, not a certified minimum. What *is* certified (2026-09-11):
   **`N` is the least 64-factor Carmichael number whose `λ(n)` divides `M = λ(N) = 1768248177696000`** —
   an exact search of all 111 divisors `D | M` that can carry one (own 64-smallest base, every
-  size-feasible radius up to 14, full product-bounded pools, `n ≡ 1 mod D`), 684 instances, 0 below
-  `N`; record counts cross-checked against an independent enumeration. The heuristic exchange search
+  size-feasible radius up to 14, full product-bounded pools, `n ≡ 1 mod D`), 684 exchange instances plus
+  111 base checks, 0 below `N`; record counts cross-checked against an independent enumeration. The heuristic exchange search
   (radius ≤ 8 over 401 portfolio moduli, radius ≤ 10 over the 23-modulus neighbourhood of `M`) also
   found nothing below `N`. See the restricted-minimum section of
   [`INTERVAL_THEOREM.md`](INTERVAL_THEOREM.md) and [`gpu/mstar_divisor_family.json`](gpu/mstar_divisor_family.json).
