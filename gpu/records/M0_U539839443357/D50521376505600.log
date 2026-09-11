@@ -1,0 +1,15 @@
+[runner] family=M0 D=50521376505600 U=5398394433579412578789368808896977180102914678583162364265665526662542455879450199776761404243377890826974683834415382639333289438994650130663712001 pool=210 cap=8359 rmax=10
+[runner] r=0 base=ksmall(64 primes, largest 641) carmichael=False below_U=False
+[     0.0s] BOUND U=5398394433579412578789368808896977180102914678583162364265665526662542455879450199776761404243377890826974683834415382639333289438994650130663712001 (148 digits) [U_OVERRIDE]; DFILTER=1
+[     0.0s] M=50521376505600 pool<8360: 210 eligible primes; bases=['ksmall']; radii 1..10; SPLIT=4000; U=148 digits
+[     0.0s]   ksmall r=1 h<=1 |INS|=146/146 host-exact: D 57 | I 146 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     0.0s]   ksmall r=2 h<=1 |INS|=140/146 host-exact: D 1,124 | I 3,806 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     1.6s]   ksmall r=3 h<=1 |INS|=134 dfilter: D 10,469 0.1s | I 37,988 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     2.9s]   ksmall r=4 h<=1 |INS|=127 dfilter: D 53,558 0.0s | I 183,828 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     4.3s]   ksmall r=5 h<=1 |INS|=116 dfilter: D 145,644 0.0s | I 461,667 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     5.7s]   ksmall r=6 h<=1 |INS|=96 dfilter: D 218,197 0.0s | I 627,978 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     7.1s]   ksmall r=7 h<=0 |INS|=79 dfilter: D 144,101 0.0s | I 380,828 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     8.4s]   ksmall r=8 h<=0 |INS|=55 dfilter: D 33,620 0.0s | I 71,325 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     9.8s]   ksmall r=9 h<=0 |INS|=38 dfilter rank: D 1,324 0.0s | I 2,894 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     9.8s]   ksmall r=10 h<=0 |INS|=10/146 host-exact: D 1 | I 1 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     9.8s] DONE complete best_digits_seen: 148 incumbent improved: False

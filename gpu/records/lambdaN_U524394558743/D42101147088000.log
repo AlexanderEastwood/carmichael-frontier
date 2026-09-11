@@ -1,0 +1,14 @@
+[runner] family=lambdaN D=42101147088000 U=5243945587436457869157283735696333365758212589223889025728267613522676393978172071040517944862906263750800337318732066878122067505358422938650976001 pool=188 cap=6317 rmax=9
+[runner] r=0 base=ksmall(64 primes, largest 661) carmichael=False below_U=False
+[     0.0s] BOUND U=5243945587436457869157283735696333365758212589223889025728267613522676393978172071040517944862906263750800337318732066878122067505358422938650976001 (148 digits) [U_OVERRIDE]; DFILTER=1
+[     0.0s] M=42101147088000 pool<6318: 188 eligible primes; bases=['ksmall']; radii 1..9; SPLIT=4000; U=148 digits
+[     0.0s]   ksmall r=1 h<=1 |INS|=124/124 host-exact: D 54 | I 124 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     0.0s]   ksmall r=2 h<=1 |INS|=119/124 host-exact: D 925 | I 2,831 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     1.6s]   ksmall r=3 h<=1 |INS|=114 dfilter: D 7,556 0.1s | I 24,047 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     3.0s]   ksmall r=4 h<=1 |INS|=105 dfilter: D 31,033 0.0s | I 92,913 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     4.4s]   ksmall r=5 h<=0 |INS|=92 dfilter: D 70,376 0.0s | I 181,555 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     5.8s]   ksmall r=6 h<=0 |INS|=77 dfilter: D 71,280 0.0s | I 164,743 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     7.2s]   ksmall r=7 h<=0 |INS|=57 dfilter: D 28,469 0.0s | I 64,610 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     8.6s]   ksmall r=8 h<=0 |INS|=39 dfilter: D 2,652 0.0s | I 6,536 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     8.7s]   ksmall r=9 h<=0 |INS|=19/124 host-exact: D 15 | I 32 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     8.7s] DONE complete best_digits_seen: 148 incumbent improved: False

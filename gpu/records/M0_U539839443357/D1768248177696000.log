@@ -1,0 +1,19 @@
+[runner] family=M0 D=1768248177696000 U=5398394433579412578789368808896977180102914678583162364265665526662542455879450199776761404243377890826974683834415382639333289438994650130663712001 pool=525 cap=82177 rmax=14
+[runner] r=0 base=ksmall(64 primes, largest 613) carmichael=False below_U=False
+[     0.0s] BOUND U=5398394433579412578789368808896977180102914678583162364265665526662542455879450199776761404243377890826974683834415382639333289438994650130663712001 (148 digits) [U_OVERRIDE]; DFILTER=1
+[     0.0s] M=1768248177696000 pool<82178: 525 eligible primes; bases=['ksmall']; radii 1..14; SPLIT=4000; U=148 digits
+[     0.0s]   ksmall r=1 h<=1 |INS|=461/461 host-exact: D 64 | I 461 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     0.0s]   ksmall r=2 h<=2 |INS|=456/461 host-exact: D 1,950 | I 29,936 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     1.6s]   ksmall r=3 h<=2 |INS|=446 dfilter rank: D 33,203 0.1s | I 727,743 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     3.1s]   ksmall r=4 h<=2 |INS|=430 dfilter rank: D 333,461 0.0s | I 8,722,393 rec 2s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     5.4s]   ksmall r=5 h<=2 |INS|=408 dfilter rank: D 2,082,166 0.1s | I 57,156,188 rec 2s pairs=2 below_U=0 min_digits=None improved=0 | GPU 2.0GB
+[    11.0s]   ksmall r=6 h<=2 |INS|=375 dfilter rank: D 8,340,300 0.2s | I 228,944,388 rec 5s pairs=7 below_U=0 min_digits=None improved=0 | GPU 2.0GB
+[    21.2s]   ksmall r=7 h<=2 |INS|=336 dfilter rank: D 22,058,306 0.6s | I 552,220,110 rec 10s pairs=49 below_U=0 min_digits=None improved=0 | GPU 7.3GB
+[    36.1s]   ksmall r=8 h<=2 |INS|=289 dfilter rank: D 35,662,162 1.0s | I 778,552,411 rec 14s pairs=76 below_U=0 min_digits=None improved=0 | GPU 7.0GB
+[    50.1s]   ksmall r=9 h<=1 |INS|=238 dfilter rank: D 36,755,836 1.0s | I 652,881,611 rec 13s pairs=78 below_U=0 min_digits=None improved=0 | GPU 7.3GB
+[    58.2s]   ksmall r=10 h<=1 |INS|=192 dfilter rank: D 22,844,474 0.6s | I 314,036,904 rec 7s pairs=26 below_U=0 min_digits=None improved=0 | GPU 2.0GB
+[    61.0s]   ksmall r=11 h<=1 |INS|=140 dfilter rank: D 6,955,830 0.2s | I 64,758,042 rec 3s pairs=3 below_U=0 min_digits=None improved=0 | GPU 3.0GB
+[    62.5s]   ksmall r=12 h<=0 |INS|=98 dfilter rank: D 887,446 0.0s | I 5,150,489 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 2.0GB
+[    63.8s]   ksmall r=13 h<=0 |INS|=53 dfilter rank: D 26,292 0.0s | I 79,113 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 2.0GB
+[    63.8s]   ksmall r=14 h<=0 |INS|=20/461 host-exact: D 13 | I 23 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[    63.8s] DONE complete best_digits_seen: 148 incumbent improved: False

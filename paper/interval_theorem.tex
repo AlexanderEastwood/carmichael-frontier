@@ -186,9 +186,12 @@ Let $D\mid M$ with $|Q(D)|\ge 64$, let $B_0(D)$ be the $64$ smallest primes of $
 product and $T_{63}=T_{64}/\max B_0(D)$, and suppose $T_{64}<U$. Let $S\subset Q(D)$ be any $64$-subset
 with $\prod S<U$. Then every prime of $S$ is at most $\lfloor (U-1)/T_{63}\rfloor$, and
 $|S\setminus B_0(D)|\le r_{\max}(D)$, where, with $a_1<a_2<\cdots$ the primes of $Q(D)\setminus B_0(D)$,
-$b_1>b_2>\cdots>b_{64}$ the primes of $B_0(D)$ in decreasing order, $L_0:=T_{64}$ and
-$L_r:=T_{64}\prod_{j\le r}a_j/\prod_{j\le r}b_j$ for $1\le r\le\min(64,|Q(D)|-64)$, the radius
-$r_{\max}(D)$ is the largest $r$ in that range with $L_r<U$ (so $r_{\max}(D)\ge0$ since $L_0=T_{64}<U$). In particular the exchange search from $B_0(D)$ at radii $0,\dots,r_{\max}(D)$
+$b_1>b_2>\cdots>b_{64}$ the primes of $B_0(D)$ in decreasing order, $R(D):=\min(64,|Q(D)|-64)$,
+$L_0:=T_{64}$ and $L_r:=T_{64}\prod_{j\le r}a_j/\prod_{j\le r}b_j$ for $1\le r\le R(D)$,
+\[
+  r_{\max}(D)\;:=\;\max\{\,r\in\mathbb Z:\ 0\le r\le R(D),\ L_r<U\,\}
+\]
+(well defined, since $L_0=T_{64}<U$). In particular the exchange search from $B_0(D)$ at radii $0,\dots,r_{\max}(D)$
 over the pool $\{q\in Q(D): q\le (U-1)/T_{63}\}$ finds every Carmichael number $n<U$ with
 $\omega(n)=64$ and $\lambda(n)=D$.
 \end{lemma}
@@ -241,36 +244,50 @@ that no completion with primes beyond the bound could be below $U$.
 
 \paragraph{Records and reproduction.}
 An implementation error found in review (the insertion cap excluded the single largest affordable
-insertion product, which can only matter at radius~$1$) was corrected and the radius-$1$ coverage of
-both families regenerated at the frozen bounds $N_0$ and $N$; the $272$ previously omitted
-completions were also checked directly, with no residue match. The per--modulus records are the
-files \code{gpu/run\_fam\_D<D>.log} (full radii) and \code{gpu/run\_fam\_D<D>\_r1fix.log} (regenerated
-radius~$1$) in the repository's run directory; the census tables are
-\code{gpu/mstar\_divisor\_family.json} and \code{gpu/divisor\_family\_lambdaJ.json}. To reproduce the
-census and, on a CUDA host with the two dumpers built, the search (add \code{U\_OVERRIDE=<bound>} to
-freeze the bound):\\
-{\small\code{python3 gpu/divisor\_family\_census.py <incumbent.json>}}\\
-{\small\code{FAMILY\_JSON=<census.json> S\_MAX\_SKIP=-1 python3 gpu/run\_mstar\_family.py}}\\
+insertion product; in these two family computations this affected only radius~$1$) was corrected,
+and both families were then re--run in full with the corrected driver; the records cited here are
+those re--runs. The $272$ completions omitted by the original runs were also checked directly, with
+no residue match. The runner uses one frozen bound for the census, the base checks and the exchange
+instances, has no default time limit, and exits with a nonzero status unless every requested modulus
+completed every requested radius; an independent coverage check re--reads the records. The
+per--modulus records are in the repository under
+\code{gpu/records/M0\_U539839443357/D<D>.log} (family of $M_0$, bound $N_0$) and
+\code{gpu/records/lambdaN\_U524394558743/D<D>.log} (family of $\lambda(N)$, bound $N$); the census
+tables are \code{gpu/mstar\_divisor\_family.json} and \code{gpu/divisor\_family\_lambdaJ.json}. To
+reproduce (the search needs a CUDA host with the two dumpers built; \code{\textbackslash} marks a
+shell continuation):\\
+{\small\code{python3 gpu/divisor\_family\_census.py <incumbent.json> <census.json>}}\\
+{\small\code{FAM\_TAG=<tag> FAMILY\_JSON=<census.json> U\_OVERRIDE=<bound> \textbackslash}}\\
+{\small\code{\ \ python3 gpu/run\_mstar\_family.py}}\\
+{\small\code{python3 gpu/verify\_family\_coverage.py <census.json> \textbackslash}}\\
+{\small\code{\ \ gpu/records/<tag>\_U<bound prefix> <bound>}}\\
 The pipeline's positive control, which rediscovers $N_0$ from the $64$ smallest primes of $Q(M_0)$ at
-radius~$8$, is\\
-{\small\code{U\_OVERRIDE=<previous incumbent> DFILTER=1 R\_MIN=8 R\_MAX=8 BASES=ksmall}}\\
-{\small\code{\ \ INS\_PRIME\_CAP=4000 python3 gpu/mitm\_gpu\_mstar\_driver.py}}\\
-The census tables establish the task universe; the run records, not the tables, certify the negative
-results.
+radius~$8$ with the bound frozen at the previous incumbent, is\\
+{\small\code{MODULUS=1768248177696000 U\_OVERRIDE=<previous incumbent> DFILTER=1 CKPT\_TAG=control \textbackslash}}\\
+{\small\code{\ \ R\_MIN=8 R\_MAX=8 BASES=ksmall INS\_PRIME\_CAP=4000 python3 gpu/mitm\_gpu\_mstar\_driver.py}}\\
+The census tables establish the task universe; the run records and the coverage check, not the
+tables, certify the negative results.
 
 \paragraph{What the two incumbents show.}
 Theorems~\ref{thm:restricted} and~\ref{thm:restrictedN} make precise where a fixed--modulus
 exchange search is blind. Within the family $\lambda(n)\mid M$ the search is exhaustive, so no
 choice of base, radius or insertion pool at $M$ or at any divisor of $M$ can reach a number
 outside it; Webster's $N$ lies outside the family of $N_0$ by exactly one prime power ($263$,
-through $1579$), and no search at $M_0$ could have found it. The lever for further improvement is
-therefore the modulus, not the radius: a candidate $\lambda$ must be proposed first, and the
-census and search of Lemma~\ref{lem:exact} then either produce a smaller number or certify that
-none exists in that family, at a cost of minutes per modulus. The two approaches are complementary
-in this sense---a $\lambda$--structured search (such as Webster's) proposes moduli, and the exact
-family search settles each one. Both incumbents have $148$ digits and differ by $3\%$, so the
-remaining uncertainty in $\Smin$ (\S\ref{sec:lower}) concerns which Carmichael function the
-minimum has, rather than its size.
+through $1579$), and no search at $M_0$ could have found it. For the two families searched here the
+lever for further improvement is therefore the modulus rather than the radius (in other, incompletely
+searched families a larger radius can still matter). Once a candidate $\lambda$ is proposed, the
+census and the search of Lemma~\ref{lem:exact} either produce a smaller number or certify that none
+exists in that family; for the two families here this took minutes per modulus, an observation about
+these computations rather than a bound for arbitrary moduli, whose pools and feasible radii may be much
+larger. Webster's number supplied a second modulus to investigate. Precisely what the two restricted
+minima establish is
+\[
+  n<N,\ n\text{ a $64$--factor Carmichael number}\quad\Longrightarrow\quad
+  \lambda(n)\nmid M_0\ \text{ and }\ \lambda(n)\nmid\lambda(N).
+\]
+This leaves considerable uncertainty about both the size and the Carmichael function of $\Smin$: the
+certified lower bound of \S\ref{sec:lower} is $10^{145}$ (with $10^{146}$ at the tier of the
+strengthening remark in \S4), and $N$ exceeds $10^{146}$ by a factor of about $52$.
 
 \section{Lower bound}\label{sec:lower}
 
@@ -492,7 +509,7 @@ and
 \]
 
 \begin{theorem}[Ladder]\label{thm:ladder}
-For every $m\ge3$ (so that $S_m$ exists), $C_m(y)\le A_m\le S_m$. Hence, for each $k$ with a verified incumbent $U_k$,
+For every $m\ge3$ for which $S_m$ exists, $C_m(y)\le A_m\le S_m$. Hence, for each $k$ with a verified incumbent $U_k$,
 $C_k(y)\le S_k\le U_k$.
 \end{theorem}
 

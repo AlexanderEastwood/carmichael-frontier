@@ -1,0 +1,16 @@
+[runner] family=lambdaN D=1867667753952000 U=5243945587436457869157283735696333365758212589223889025728267613522676393978172071040517944862906263750800337318732066878122067505358422938650976001 pool=267 cap=13574 rmax=11
+[runner] r=0 base=ksmall(64 primes, largest 641) carmichael=False below_U=False
+[     0.0s] BOUND U=5243945587436457869157283735696333365758212589223889025728267613522676393978172071040517944862906263750800337318732066878122067505358422938650976001 (148 digits) [U_OVERRIDE]; DFILTER=1
+[     0.0s] M=1867667753952000 pool<13575: 267 eligible primes; bases=['ksmall']; radii 1..11; SPLIT=4000; U=148 digits
+[     0.0s]   ksmall r=1 h<=1 |INS|=203/203 host-exact: D 61 | I 203 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     0.0s]   ksmall r=2 h<=1 |INS|=199/203 host-exact: D 1,374 | I 6,939 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     1.5s]   ksmall r=3 h<=1 |INS|=191 dfilter: D 14,739 0.1s | I 88,607 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     2.9s]   ksmall r=4 h<=1 |INS|=181 dfilter: D 87,185 0.0s | I 564,352 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     4.2s]   ksmall r=5 h<=1 |INS|=166 dfilter: D 283,326 0.0s | I 1,946,610 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     5.6s]   ksmall r=6 h<=1 |INS|=146 dfilter: D 540,291 0.0s | I 3,929,330 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     7.0s]   ksmall r=7 h<=1 |INS|=121 dfilter: D 584,267 0.0s | I 4,199,050 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     8.1s]   ksmall r=8 h<=0 |INS|=99 dfilter: D 290,099 0.0s | I 1,963,140 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     9.3s]   ksmall r=9 h<=0 |INS|=70 dfilter rank: D 56,088 0.0s | I 372,577 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[    10.4s]   ksmall r=10 h<=0 |INS|=43 dfilter rank: D 2,226 0.0s | I 15,080 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[    10.4s]   ksmall r=11 h<=0 |INS|=14/203 host-exact: D 2 | I 6 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[    10.4s] DONE complete best_digits_seen: 148 incumbent improved: False

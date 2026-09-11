@@ -1,0 +1,16 @@
+[runner] family=M0 D=84202294176000 U=5398394433579412578789368808896977180102914678583162364265665526662542455879450199776761404243377890826974683834415382639333289438994650130663712001 pool=273 cap=16220 rmax=11
+[runner] r=0 base=ksmall(64 primes, largest 641) carmichael=False below_U=False
+[     0.0s] BOUND U=5398394433579412578789368808896977180102914678583162364265665526662542455879450199776761404243377890826974683834415382639333289438994650130663712001 (148 digits) [U_OVERRIDE]; DFILTER=1
+[     0.0s] M=84202294176000 pool<16221: 273 eligible primes; bases=['ksmall']; radii 1..11; SPLIT=4000; U=148 digits
+[     0.0s]   ksmall r=1 h<=1 |INS|=209/209 host-exact: D 63 | I 209 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     0.0s]   ksmall r=2 h<=1 |INS|=203/209 host-exact: D 1,463 | I 7,454 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     1.6s]   ksmall r=3 h<=1 |INS|=194 dfilter: D 16,424 0.1s | I 101,891 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     3.0s]   ksmall r=4 h<=1 |INS|=187 dfilter: D 102,838 0.0s | I 699,005 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     4.5s]   ksmall r=5 h<=1 |INS|=173 dfilter: D 358,321 0.0s | I 2,629,056 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     6.1s]   ksmall r=6 h<=1 |INS|=152 dfilter: D 745,631 0.0s | I 5,848,077 rec 2s pairs=1 below_U=0 min_digits=None improved=0 | GPU 1.2GB
+[     7.6s]   ksmall r=7 h<=1 |INS|=132 dfilter: D 906,000 0.0s | I 7,054,475 rec 2s pairs=2 below_U=0 min_digits=None improved=0 | GPU 1.3GB
+[     9.1s]   ksmall r=8 h<=1 |INS|=106 dfilter: D 535,848 0.0s | I 3,889,651 rec 1s pairs=1 below_U=0 min_digits=None improved=0 | GPU 1.3GB
+[    10.5s]   ksmall r=9 h<=0 |INS|=78 dfilter rank: D 135,279 0.0s | I 917,807 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.2GB
+[    11.9s]   ksmall r=10 h<=0 |INS|=49 dfilter rank: D 8,925 0.0s | I 53,545 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.2GB
+[    13.3s]   ksmall r=11 h<=0 |INS|=24 dfilter rank: D 38 0.0s | I 173 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.2GB
+[    13.3s] DONE complete best_digits_seen: 148 incumbent improved: False

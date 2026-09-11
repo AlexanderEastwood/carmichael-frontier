@@ -1,0 +1,10 @@
+[runner] family=M0 D=14033715696000 U=5398394433579412578789368808896977180102914678583162364265665526662542455879450199776761404243377890826974683834415382639333289438994650130663712001 pool=100 cap=1603 rmax=5
+[runner] r=0 base=ksmall(64 primes, largest 673) carmichael=False below_U=False
+[     0.0s] BOUND U=5398394433579412578789368808896977180102914678583162364265665526662542455879450199776761404243377890826974683834415382639333289438994650130663712001 (148 digits) [U_OVERRIDE]; DFILTER=1
+[     0.0s] M=14033715696000 pool<1604: 100 eligible primes; bases=['ksmall']; radii 1..5; SPLIT=4000; U=148 digits
+[     0.0s]   ksmall r=1 h<=0 |INS|=36/36 host-exact: D 28 | I 36 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     0.0s]   ksmall r=2 h<=0 |INS|=35/36 host-exact: D 232 | I 247 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     0.0s]   ksmall r=3 h<=0 |INS|=32/36 host-exact: D 628 | I 394 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     0.0s]   ksmall r=4 h<=0 |INS|=24/36 host-exact: D 552 | I 162 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     0.0s]   ksmall r=5 h<=0 |INS|=11/36 host-exact: D 54 | I 9 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     0.0s] DONE complete best_digits_seen: 148 incumbent improved: False

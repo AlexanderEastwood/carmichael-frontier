@@ -1,0 +1,15 @@
+[runner] family=M0 D=88412408884800 U=5398394433579412578789368808896977180102914678583162364265665526662542455879450199776761404243377890826974683834415382639333289438994650130663712001 pool=258 cap=14015 rmax=10
+[runner] r=0 base=ksmall(64 primes, largest 631) carmichael=False below_U=False
+[     0.0s] BOUND U=5398394433579412578789368808896977180102914678583162364265665526662542455879450199776761404243377890826974683834415382639333289438994650130663712001 (148 digits) [U_OVERRIDE]; DFILTER=1
+[     0.0s] M=88412408884800 pool<14016: 258 eligible primes; bases=['ksmall']; radii 1..10; SPLIT=4000; U=148 digits
+[     0.0s]   ksmall r=1 h<=1 |INS|=194/194 host-exact: D 62 | I 194 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     0.0s]   ksmall r=2 h<=1 |INS|=192/194 host-exact: D 1,395 | I 6,258 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     1.5s]   ksmall r=3 h<=1 |INS|=182 dfilter: D 15,184 0.1s | I 74,094 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     2.9s]   ksmall r=4 h<=1 |INS|=169 dfilter: D 91,828 0.0s | I 420,639 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     4.2s]   ksmall r=5 h<=1 |INS|=157 dfilter: D 301,939 0.0s | I 1,287,766 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     5.6s]   ksmall r=6 h<=1 |INS|=132 dfilter: D 516,513 0.0s | I 2,019,164 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     7.0s]   ksmall r=7 h<=1 |INS|=100 dfilter: D 445,881 0.0s | I 1,401,295 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     8.4s]   ksmall r=8 h<=0 |INS|=74 dfilter: D 143,165 0.0s | I 401,223 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     9.7s]   ksmall r=9 h<=0 |INS|=44 dfilter rank: D 9,242 0.0s | I 26,654 rec 1s pairs=0 below_U=0 min_digits=None improved=0 | GPU 1.1GB
+[     9.8s]   ksmall r=10 h<=0 |INS|=19/194 host-exact: D 22 | I 51 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     9.8s] DONE complete best_digits_seen: 148 incumbent improved: False

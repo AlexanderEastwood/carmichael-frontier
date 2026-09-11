@@ -260,6 +260,7 @@ def main():
                 bf = sorted(int(p) for p in json.load(open(os.environ["BASE_JSON"]))["factors"]); log(f"S64 base from {os.environ['BASE_JSON']}")
             b = [p for p in bf if p in Pset]; extra = [p for p in sorted(P) if p not in set(b)]
             bases.append(("S64", sorted(b + extra[:K - len(b)])))
+    log(f"BOUND U={cur_U()} ({len(str(cur_U()))} digits){' [U_OVERRIDE]' if os.environ.get('U_OVERRIDE') else ''}; DFILTER={int(DFILTER)}")
     log(f"M={M} pool<{INS_PRIME_CAP}: {len(P)} eligible primes; bases={[t for t,_ in bases]}; radii {R_MIN}..{R_MAX}; SPLIT={SPLIT}; U={len(str(cur_U()))} digits")
     save()
     for r in range(R_MIN, R_MAX + 1):

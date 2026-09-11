@@ -1,0 +1,9 @@
+[runner] family=lambdaN D=7016857848000 U=5243945587436457869157283735696333365758212589223889025728267613522676393978172071040517944862906263750800337318732066878122067505358422938650976001 pool=95 cap=1483 rmax=4
+[runner] r=0 base=ksmall(64 primes, largest 691) carmichael=False below_U=False
+[     0.0s] BOUND U=5243945587436457869157283735696333365758212589223889025728267613522676393978172071040517944862906263750800337318732066878122067505358422938650976001 (148 digits) [U_OVERRIDE]; DFILTER=1
+[     0.0s] M=7016857848000 pool<1484: 95 eligible primes; bases=['ksmall']; radii 1..4; SPLIT=4000; U=148 digits
+[     0.0s]   ksmall r=1 h<=0 |INS|=31/31 host-exact: D 26 | I 31 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     0.0s]   ksmall r=2 h<=0 |INS|=30/31 host-exact: D 156 | I 165 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     0.0s]   ksmall r=3 h<=0 |INS|=24/31 host-exact: D 286 | I 191 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     0.0s]   ksmall r=4 h<=0 |INS|=16/31 host-exact: D 80 | I 31 rec 0s pairs=0 below_U=0 min_digits=None improved=0
+[     0.0s] DONE complete best_digits_seen: 148 incumbent improved: False
