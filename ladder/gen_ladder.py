@@ -103,14 +103,16 @@ def main():
            "C63_check": "OK", "exclusions": {k: str(v[0]) for k, v in EXCLUSIONS.items()}, "rows": rows}
     json.dump(man, open(os.path.join(root, "ladder", "ladder_manifest.json"), "w"), indent=1)
     # markdown
-    L = ["# Interval table: C_k(97) ≤ A_k ≤ S_k ≤ U_k, k = 64…144", "",
+    L = ["# Certified bounds for the least Carmichael numbers with 64–144 prime factors", "",
+         "Certified lower and upper bounds C_k(97) ≤ A_k ≤ S_k ≤ U_k with exact endpoints (see `ladder_manifest.json`) and the quantified gain over the identified previous bound (the elementary primorial baseline). No priority is claimed; the bounds stand on the computations.", "",
          f"Certified relaxed lower bound C_k(97) from one shared pass over {st['classes']:,} head classes (y=97, tail primes ≤ {TAIL_LIMIT:,}, largest tail prime used {st['max_tail_prime_used']}), {tC:.1f} s; C_63 reproduces the known 142-digit constant. "
          "Every U_k re-verified by the frozen oracle. Stronger rows use a **completed** Carmichael exclusion. Admissible (C/A) and Carmichael (S) bounds are never conflated.", "",
-         "| k | primorial digits | C_k(97) digits | lower bound used | S_k digits ∈ | U_k digits | U_k largest p | U_k oracle |",
-         "|--:|--:|--:|:--|:--:|--:|--:|:--:|"]
+         "| k | primorial digits | C_k(97) digits | gain | lower bound used | S_k digits ∈ | U_k digits | U_k largest p | U_k oracle |",
+         "|--:|--:|--:|--:|:--|:--:|--:|--:|:--:|"]
     for r in rows:
         iv = f"[{r['interval_digits'][0]}, {r['interval_digits'][1]}]" if r["interval_digits"] else "—"
-        L.append(f"| {r['k']} | {r['primorial_digits']} | {r['C_k97_digits']} | {r['lower_source']} | **{iv}** | {r['U_k_digits'] or '—'} | {r['U_k_largest_prime'] or '—'} | {'✓' if r['U_k_oracle_ok'] else ('✗' if r['U_k_oracle_ok'] is False else '—')} |")
+        gain = r["C_k97_digits"] - r["primorial_digits"]
+        L.append(f"| {r['k']} | {r['primorial_digits']} | {r['C_k97_digits']} | +{gain} | {r['lower_source']} | **{iv}** | {r['U_k_digits'] or '—'} | {r['U_k_largest_prime'] or '—'} | {'✓' if r['U_k_oracle_ok'] else ('✗' if r['U_k_oracle_ok'] is False else '—')} |")
     open(os.path.join(root, "ladder", "LADDER_TABLE.md"), "w").write("\n".join(L) + "\n")
     bad = [r["k"] for r in rows if r["U_k_oracle_ok"] is False]
     print(f"classes={st['classes']} C63=OK pass={tC:.1f}s max_tail={st['max_tail_prime_used']} rows={len(rows)} oracle_failures={bad}")
