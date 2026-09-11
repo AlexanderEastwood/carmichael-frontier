@@ -55,8 +55,11 @@ def pool_relaxed(fm):
         q = d + 1
         if 3 <= q <= SIEVE_BOUND and _S[q]: out.append(q)
     return sorted(out)
+M0_ = 1768248177696000; LN_ = 155016423578016000
 def relaxed_survives(fm, U):
-    """False only if even the relaxed pool cannot produce a 64-product below U (then no divisor can either)."""
+    """False only if even the relaxed pool cannot produce a qualifying 64-product below U (then no divisor can
+    either): both the cheapest 64-product and the cheapest two-witness 64-product (Theorems 2-3) are monotone
+    in D when computed over the relaxed pool, so pruning on them is sound."""
     P = pool_relaxed(fm)
     if len(P) < 64:
         lb = 1
@@ -64,7 +67,9 @@ def relaxed_survives(fm, U):
         return lb * (SIEVE_BOUND + 1) ** (64 - len(P)) < U
     T64 = 1
     for p in P[:64]: T64 *= p
-    return T64 < U
+    if T64 >= U: return False
+    w = two_witness_min(P, U, M0_, LN_)
+    return w is not None and w < U
 def two_witness_min(P, U, M0, LN):
     """Exact minimum 64-product from pool P containing a prime q with (q-1) ∤ M0 AND a prime q' with (q'-1) ∤ LN
     (Theorems 2-3: every 64-factor Carmichael below N has both). Returns (digits, product) or None if impossible."""
@@ -106,19 +111,19 @@ def census_row(D, fm, U, Ufactors):
     s = sum(1 for p in Ufactors if D % (p - 1) != 0)
     return {"D": D, "s": s, "pool": len(P), "cap": cap, "pool_capped": len(Pc), "rmax": rmax, "digits_T64": len(str(T64))}
 
-def survivors_with_p(Mp_fm, p, U, Ufactors):
+def survivors_with_p(Mp_fm, p, U, Ufactors, seen_global=None):
     """Top-down DFS over exponent vectors of M' (p's exponent fixed at 1): survivors are downward-closed
     in the divisor lattice's complement, i.e. if D is NOT a survivor no divisor of D is."""
     primes = [q for q in Mp_fm if q != p]; emax = [Mp_fm[q] for q in primes]
-    seen = {}; out = []; problems = []
+    seen = {} if seen_global is None else seen_global; out = []; problems = []
     def D_of(vec):
         D = p
         for q, e in zip(primes, vec): D *= q ** e
         return D
     def rec(vec):
-        key = tuple(vec)
+        D = D_of(vec); key = D                       # key by the modulus itself so variants share visits
         if key in seen: return seen[key]
-        D = D_of(vec); fm = {q: e for q, e in zip(primes, vec) if e} ; fm[p] = 1
+        fm = {q: e for q, e in zip(primes, vec) if e} ; fm[p] = 1
         if not relaxed_survives(fm, U): seen[key] = False; return False      # sound prune: monotone relaxed pool
         row = census_row(D, fm, U, Ufactors)
         seen[key] = True
@@ -136,16 +141,15 @@ def work(args):
     seed, seed_fm, p, U, Ufactors = args
     rows = {}; problems = []
     if seed % p == 0: return rows, problems
+    # M' = M*p covers every (M/q^j)*p (their divisors are divisors of M*p and the top-down census reaches all
+    # relaxed survivors), so only the pure addition and the exponent-increase neighbours M*q*p are distinct roots.
     variants = [(None, 0, dict(seed_fm))]
     for q, e in seed_fm.items():
-        for j in range(1, e + 1):
-            fm = dict(seed_fm); fm[q] = e - j
-            if fm[q] == 0: del fm[q]
-            variants.append((q, j, fm))
-        fm = dict(seed_fm); fm[q] = e + 1; variants.append((q, -1, fm))      # exponent increase (j = -1)
+        fm = dict(seed_fm); fm[q] = e + 1; variants.append((q, -1, fm))
+    shared = {}
     for q, j, fm in variants:
         fm2 = dict(fm); fm2[p] = 1
-        out, prob = survivors_with_p(fm2, p, U, Ufactors); problems += prob
+        out, prob = survivors_with_p(fm2, p, U, Ufactors, shared); problems += prob
         for r in out:
             if r["D"] not in rows: rows[r["D"]] = dict(r, seed=str(seed), q=q, j=j, p=p)
     return rows, problems
