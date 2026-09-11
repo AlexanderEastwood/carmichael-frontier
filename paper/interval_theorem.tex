@@ -225,6 +225,20 @@ $(q-1)\nmid\lambda(N)$ and a prime factor $q'$ with $(q'-1)\nmid M_0$.
 Both restricted minima are statements about a divisor family, not about $\Smin$. The census script
 (\code{gpu/divisor\_family\_census.py}) is standard--library Python and independent of the GPU code.
 
+\paragraph{What the two incumbents show.}
+Theorems~\ref{thm:restricted} and~\ref{thm:restrictedN} make precise where a fixed--modulus
+exchange search is blind. Within the family $\lambda(n)\mid M$ the search is exhaustive, so no
+choice of base, radius or insertion pool at $M$ or at any divisor of $M$ can reach a number
+outside it; Webster's $N$ lies outside the family of $N_0$ by exactly one prime power ($263$,
+through $1579$), and no search at $M_0$ could have found it. The lever for further improvement is
+therefore the modulus, not the radius: a candidate $\lambda$ must be proposed first, and the
+census and search of Lemma~\ref{lem:exact} then either produce a smaller number or certify that
+none exists in that family, at a cost of minutes per modulus. The two approaches are complementary
+in this sense---a $\lambda$--structured search (such as Webster's) proposes moduli, and the exact
+family search settles each one. Both incumbents have $148$ digits and differ by $3\%$, so the
+remaining uncertainty in $\Smin$ (\S\ref{sec:lower}) concerns which Carmichael function the
+minimum has, rather than its size.
+
 \section{Lower bound}\label{sec:lower}
 
 Fix $Y=10^{145}$. We show no $64$--factor Carmichael number lies below $Y$.
