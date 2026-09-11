@@ -41,8 +41,14 @@ previous 148-digit incumbent by a factor of 1.605):
   pasted decimal.** `ref/ref_carmichael.py::verify_certificate` confirms squarefree, 64 distinct
   primes (independent Miller–Rabin), Korselt `(p−1)|(N−1)` for every `p`; `10^147 ≤ N < 10^148`.
 - Sits between Webster's neighbours `N₆₃` (145 digits) and the `N₆₅` candidate (151), where a true
-  `S₆₄` must lie. Still an **upper bound**, not a certified minimum — the exchange search explored
-  only radius `r ≤ 5` over part of the modulus portfolio.
+  `S₆₄` must lie. Still an **upper bound**, not a certified minimum. What *is* certified (2026-09-11):
+  **`N` is the least 64-factor Carmichael number whose `λ(n)` divides `M = λ(N) = 1768248177696000`** —
+  an exact search of all 111 divisors `D | M` that can carry one (own 64-smallest base, every
+  size-feasible radius up to 14, full product-bounded pools, `n ≡ 1 mod D`), 684 instances, 0 below
+  `N`; record counts cross-checked against an independent enumeration. The heuristic exchange search
+  (radius ≤ 8 over 401 portfolio moduli, radius ≤ 10 over the 23-modulus neighbourhood of `M`) also
+  found nothing below `N`. See the restricted-minimum section of
+  [`INTERVAL_THEOREM.md`](INTERVAL_THEOREM.md) and [`gpu/mstar_divisor_family.json`](gpu/mstar_divisor_family.json).
 - The original 149-digit candidate and its full write-up remain in
   [`results_k64.json`](results_k64.json) / [`RESULTS_k64.md`](RESULTS_k64.md).
 

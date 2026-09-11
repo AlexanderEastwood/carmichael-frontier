@@ -40,6 +40,34 @@ Everything below is at repository revision `f872e32`.
   candidate has 151 digits (so it exceeds `N`). The original 149-digit candidate is in
   [`results_k64.json`](results_k64.json) / [`RESULTS_k64.md`](RESULTS_k64.md).
 
+### A restricted minimum: `N` is the least 64-factor Carmichael number with `λ(n) | M` (2026-09-11)
+
+Write `M = λ(N) = 2⁸·3⁵·5³·7²·11·13·17·23·83 = 1768248177696000`. Every Carmichael number `n` with
+exactly 64 prime factors and `λ(n) | M` has `λ(n) = D` for some divisor `D` of `M`, all its primes `q`
+in `Q(D) = {q prime : (q−1) | D, q ∤ D}` (for a Carmichael number `q | λ(n)` is impossible), and
+`n ≡ 1 (mod D)`. Of the 20 736 divisors of `M`, only **111** have a `Q(D)` whose 64 smallest primes
+multiply to less than `N`; for each of those, any 64-subset of `Q(D)` with product `< N` uses only primes
+`q ≤ (N−1)/T₆₃(D)` and differs from the 64 smallest primes of `Q(D)` in at most `r_max(D)` places
+(`r_max(M) = 14`; every other `D` has `r_max ≤ 13`; radius 15 at `M` is already `> 1.83·N`).
+We searched every one of the 111 moduli exactly — its own 64-smallest base, every radius `0..r_max(D)`,
+the full product-bounded pool, the exact deletion/insertion product bounds, and the residue join
+`n ≡ 1 (mod D)` — and found **no 64-factor Carmichael number below `N`**. Hence
+
+> **`N` is the smallest Carmichael number with exactly 64 prime factors whose Carmichael function divides `M`.**
+
+This is a restricted minimum over the family `λ(n) | M`, *not* a determination of `S₆₄`: a smaller
+64-factor Carmichael number would have to have a `λ` that does not divide `M`. Data:
+[`gpu/mstar_divisor_family.json`](gpu/mstar_divisor_family.json) (the 111 moduli with pool caps and
+`r_max`), runner [`gpu/run_mstar_family.py`](gpu/run_mstar_family.py), driver
+[`gpu/mitm_gpu_mstar_driver.py`](gpu/mitm_gpu_mstar_driver.py) with the filtered deletion side
+[`src/mitm64_ddump.cpp`](src/mitm64_ddump.cpp) and rank-encoded insertion side
+[`src/mitm64_idump_stream2.cpp`](src/mitm64_idump_stream2.cpp). Cross-checks: the deletion/insertion
+record counts at `M` from the 64-smallest base for radii 4 and 9–14 (8 722 393 insertion products at
+r=4; 36 755 836 / 652 881 611 at r=9; 6 955 830 / 64 758 042 at r=11; 13 / 23 at r=14) agree exactly
+with an independent exact enumeration by GPT-6, which also ran the whole family
+independently with the same negative result; the pipeline rediscovers `N` from the 64-smallest base at
+radius 8 when the bound is frozen at the previous incumbent. 684 instances, 0 incomplete.
+
 ## Lower bound — no 64-factor Carmichael below 10¹⁴⁵ (finite exhaustion)
 
 **1. Certified prime universe.** For every 64-factor Carmichael `n` and every prime factor `q | n`,

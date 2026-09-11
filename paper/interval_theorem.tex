@@ -121,6 +121,25 @@ digits, hence exceeds $N$. This uses the proved interval and the stated digit le
 appeal to any general monotonicity of $S_k$.
 \end{remark}
 
+\begin{remark}[A restricted minimum over $\lambda(n)\mid M$]\label{rem:restricted}
+Write $M=\lambda(N)=2^8\cdot3^5\cdot5^3\cdot7^2\cdot11\cdot13\cdot17\cdot23\cdot83$. If $n$ is a
+Carmichael number with exactly $64$ prime factors and $\lambda(n)\mid M$, then $D:=\lambda(n)$ is a
+divisor of $M$, every prime $q\mid n$ lies in $Q(D)=\{q:\ (q-1)\mid D,\ q\nmid D\}$ (a prime factor of
+a Carmichael number never divides its $\lambda$), and $n\equiv1\pmod D$. Of the $20\,736$ divisors of
+$M$ only $111$ have a $Q(D)$ whose $64$ smallest primes multiply to less than $N$; for each of these,
+a $64$-subset of $Q(D)$ with product below $N$ uses only primes $q\le (N-1)/T_{63}(D)$ and differs from
+the $64$ smallest primes of $Q(D)$ in at most $r_{\max}(D)\le 14$ places (at $D=M$, fifteen exchanges
+already exceed $1.83\,N$). Searching all $111$ moduli exhaustively in this sense---own $64$-smallest
+base, every radius $0,\dots,r_{\max}(D)$ over the full product-bounded pool, exact deletion and
+insertion product bounds, residue join $n\equiv1\pmod D$---produced no $64$-factor Carmichael number
+below $N$. Hence \emph{$N$ is the least Carmichael number with exactly $64$ prime factors whose
+Carmichael function divides $M$}. This is a statement about the family $\lambda(n)\mid M$, not about
+$\Smin$: a smaller $64$-factor Carmichael number must have a $\lambda$ not dividing $M$. The
+deletion/insertion record counts at $M$ (for instance $36\,755\,836$ and $652\,881\,611$ at radius
+$9$, and $13$ and $23$ at radius $14$) agree exactly with an independent enumeration; the moduli,
+pool caps and radii are tabulated in \texttt{gpu/mstar\_divisor\_family.json}.
+\end{remark}
+
 \section{Lower bound}\label{sec:lower}
 
 Fix $Y=10^{145}$. We show no $64$--factor Carmichael number lies below $Y$.
