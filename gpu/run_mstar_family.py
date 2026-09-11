@@ -47,9 +47,14 @@ def main() -> None:
     rec_dir = os.path.join(HERE, "records", f"{FAM_TAG}_U{str(U)[:12]}"); os.makedirs(rec_dir, exist_ok=True)
     todo = [r for r in fam if r["s"] > S_MAX_SKIP]
     if os.environ.get("S_ONLY_LE"): todo = [r for r in fam if r["s"] <= int(os.environ["S_ONLY_LE"])]
+    if os.environ.get("FAM_ORDER", "rmax") == "file": order = lambda rows: rows            # keep the census file's order (e.g. richest first)
+    else: order = lambda rows: sorted(rows, key=lambda r: r["rmax"])
+    todo = order(todo)
+    if os.environ.get("FAM_SHARD"):                      # FAM_SHARD=i/n : this runner takes rows with index % n == i
+        i, n = (int(x) for x in os.environ["FAM_SHARD"].split("/")); todo = [r for k, r in enumerate(todo) if k % n == i]
     log(f"family {FAM_TAG}: {len(fam)} survivors; running {len(todo)}; U={len(str(U))} digits (U_OVERRIDE={'yes' if os.environ.get('U_OVERRIDE') else 'no'}); records {rec_dir}")
     n_r0 = 0; n_hit = 0; failures = []
-    for row in sorted(todo, key=lambda r: r["rmax"]):
+    for row in todo:
         D, cap, rmax = int(row["D"]), int(row["cap"]), int(row["rmax"])
         if DEADLINE and dt.datetime.now(dt.timezone.utc) > DEADLINE: log("DEADLINE reached; stopping"); failures.append(("deadline", D)); break
         P = pool(D, cap); assert len(P) == row["pool_capped"], (D, len(P), row["pool_capped"])
