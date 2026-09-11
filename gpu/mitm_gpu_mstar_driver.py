@@ -1,0 +1,194 @@
+#!/usr/bin/env python3
+"""
+mitm_gpu_mstar_driver.py -- expanded-insertion-pool exchange-MITM at ONE modulus
+(the incumbent's own, M* = 1768248177696000), radii 5..8, GPU D side + streamed I side.
+
+Why (review, 2026-09-11): the r=8 portfolio sweep improved the incumbent only at
+M*, and at M* the 4000-prime insertion cutoff is BINDING (eligible/insertions:
+<4000 -> 171/107, <10000 -> 254/190, whole product-bounded pool -> 525/461) while
+the 160-insertion cap is not. So: keep M*, raise the prime cutoff, and stratify
+by the number h of insertion primes above SPLIT (4000): with D_max_r = product of
+the r largest base factors, a_j the small insertion primes ascending, c_j the
+large ones ascending, every completion with h large insertions satisfies
+    n >= (P_B / D_max_r) * prod_{j<=r-h} a_j * prod_{j<=h} c_j ,
+so h is skipped whenever that bound is >= the incumbent (at r=8 this gives
+h <= 2 for both bases). Exact radii 1..4 over the full pool were already
+searched exhaustively (no improvement), so radii start at 5.
+
+Fixes from the same review vs the block driver: (i) completion identity is
+(M, base tag, sha256(INS), r), never just (r, idx); (ii) the I side uses
+src/mitm64_idump_stream2 (cheapest-completion bound + loop bound; validated
+record-identical to v1 and ~10x faster), with IDUMP_SPLIT/IDUMP_HMAX per instance.
+
+Every join pair is re-checked on the host in exact big-int and by the frozen
+oracle before it can touch the incumbent. Own checkpoint/results files.
+Run:  ~/erdos/.venv/bin/python gpu/mitm_gpu_mstar_driver.py
+Env:  R_MIN (5) R_MAX (8) INS_PRIME_CAP (10000) INS_MAX (256) SPLIT (4000)
+      BASES (S64,ksmall) NCHUNKS_D (16) I_CHUNK (200000000) IDUMP_T (8)
+      IDUMP_TIMEOUT (3600) WALL_CAP (14400) MODULUS (from results_k64_best_global.json)
+"""
+import os, sys, json, time, hashlib, subprocess
+from math import comb
+HERE = os.path.dirname(os.path.abspath(__file__)); FR = os.path.abspath(os.path.join(HERE, ".."))
+sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(FR, "ref"))
+import ref_carmichael as ref
+import mitm_gpu2 as G
+import numpy as np, cupy as cp
+
+R_MIN = int(os.environ.get("R_MIN", "5")); R_MAX = int(os.environ.get("R_MAX", "8"))
+INS_PRIME_CAP = int(os.environ.get("INS_PRIME_CAP", "10000")); INS_MAX = int(os.environ.get("INS_MAX", "256"))
+SPLIT = int(os.environ.get("SPLIT", "4000")); BASES = [b for b in os.environ.get("BASES", "S64,ksmall").split(",") if b]
+NCHUNKS_D = int(os.environ.get("NCHUNKS_D", "16")); I_CHUNK = int(os.environ.get("I_CHUNK", "200000000"))
+IDUMP_T = int(os.environ.get("IDUMP_T", "8")); IDUMP_TIMEOUT = float(os.environ.get("IDUMP_TIMEOUT", "3600"))
+WALL_CAP = float(os.environ.get("WALL_CAP", "14400"))
+IDUMP = os.path.join(FR, "src", "mitm64_idump_stream2")
+CKPT = os.path.join(HERE, "checkpoint_mstar.json"); RESULTS = os.path.join(HERE, "results_k64_gpu_mstar.json")
+K = 64; T0 = time.time()
+def log(*a): print(f"[{time.time()-T0:8.1f}s]", *a, flush=True)
+
+inc = json.load(open(os.path.join(FR, "results_k64_best_global.json")))
+U0 = int(inc["n"]); U0_factors = sorted(int(p) for p in inc["factors"])
+M = int(os.environ.get("MODULUS") or inc["modulus"])
+state = {"modulus": str(M), "orig_incumbent": str(U0), "incumbent": None, "incumbent_factors": None,
+         "done": [], "instances": 0, "pairs_total": 0, "completions_below_U": 0, "oracle_rejects": 0,
+         "best_digits_seen": len(str(U0)), "status": "running", "started": time.strftime("%Y-%m-%d %H:%M:%S")}
+if os.path.exists(CKPT):
+    old = json.load(open(CKPT))
+    if old.get("modulus") == str(M):
+        for k in ("incumbent", "incumbent_factors", "done", "instances", "pairs_total", "completions_below_U", "oracle_rejects", "best_digits_seen"):
+            if k in old: state[k] = old[k]
+        log("RESUMING:", len(state["done"]), "instances already completed")
+def cur_U(): return int(state["incumbent"]) if state["incumbent"] else U0
+def save():
+    state["elapsed_s"] = round(time.time() - T0, 1); tmp = CKPT + ".tmp"
+    json.dump(state, open(tmp, "w"), indent=1); os.replace(tmp, CKPT)
+def gpu_used_gb(): f, t = cp.cuda.Device().mem_info; return (t - f) / 2**30
+
+def pool(M, cap):
+    out = []; q = 3
+    while q < cap:
+        if M % (q - 1) == 0 and M % q != 0 and ref.is_prime(q): out.append(q)
+        q += 2
+    return out
+
+def hmax_for(B0, INS, r, U):
+    """Largest h (number of insertion primes > SPLIT) that could still improve on U; -1 if none."""
+    small = [p for p in INS if p <= SPLIT]; large = [p for p in INS if p > SPLIT]
+    PB = 1
+    for p in B0: PB *= p
+    Dmax = 1
+    for p in sorted(B0)[-r:]: Dmax *= p
+    best = -1
+    for h in range(0, r + 1):
+        if h > len(large) or r - h > len(small): continue
+        v = PB
+        for p in small[:r - h]: v *= p
+        for p in large[:h]: v *= p
+        if v < U * Dmax: best = h            # bound below the incumbent: this stratum can improve
+    return best
+
+def build_D(B0, M, r):
+    tot = comb(K, r); b = [tot * i // NCHUNKS_D for i in range(NCHUNKS_D + 1)]; chunks = []
+    for a, c in zip(b, b[1:]):
+        k, i = G.generate(B0, r, M, 1, bits=6, lo=a, hi=c); chunks.append(G.sort_side(k, i)); del k, i
+    cp.get_default_memory_pool().free_all_blocks(); return chunks
+
+def _read_block(f, nbytes):
+    buf = bytearray(nbytes); mv = memoryview(buf); got = 0
+    while got < nbytes:
+        n = f.readinto(mv[got:])
+        if not n: break
+        got += n
+    return buf[:got]
+
+def consider(prov, factors, lever):
+    if len(factors) != K or len(set(factors)) != K: return False
+    ok, n, _why = ref.verify_certificate(sorted(factors))
+    if not ok: state["oracle_rejects"] += 1; return False
+    dg = len(str(n)); state["best_digits_seen"] = min(state["best_digits_seen"], dg)
+    if n < cur_U():
+        state.update(incumbent=str(n), incumbent_factors=sorted(factors))
+        log(f"  *** NEW BEST k=64 CARMICHAEL {dg} digits (< {len(str(U0))}) prov {prov} lever {lever} ***")
+        json.dump({"n": str(n), "factors": sorted(factors), "modulus": str(M), "provenance": str(prov), "digits": dg, "lever": lever,
+                   "improves_over": str(U0), "orig_digits": len(str(U0)), "oracle": "Carmichael with exactly 64 prime factors",
+                   "when": time.strftime("%Y-%m-%d %H:%M:%S")}, open(RESULTS, "w"), indent=1)
+        save(); return True
+    return False
+
+def run_instance(tag, B0, INS, r, hmax):
+    B0set = set(B0); B0s = sorted(B0); P0 = 1
+    for p in B0: P0 *= p
+    U = cur_U(); topI = 1
+    for p in INS[-r:]: topI *= p
+    ptb = 1
+    for p in B0s[-r:]: ptb *= p
+    Icap = max(1, min(topI, (U * ptb) // P0 + 1)); pdm = 1
+    for p in B0s[:r]: pdm *= p
+    t = time.time(); Dch = build_D(B0, M, r); tD = time.time() - t
+    inp = ("\n".join([f"{M} {r} {P0 % M} {Icap} {pdm} {IDUMP_T} 0", "64 " + " ".join(map(str, B0)), f"{len(INS)} " + " ".join(map(str, INS))]) + "\n").encode()
+    env = dict(os.environ, IDUMP_SPLIT=str(SPLIT), IDUMP_HMAX=str(hmax))
+    pr = subprocess.Popen([IDUMP], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+    assert pr.stdin and pr.stdout and pr.stderr
+    pr.stdin.write(inp); pr.stdin.close()
+    t0 = time.time(); pairs = 0; below = 0; nb = 0; rmin = None; read_rec = 0; timed_out = False
+    while True:
+        blk = _read_block(pr.stdout, I_CHUNK * 16)
+        if not blk: break
+        a = np.frombuffer(blk, dtype=np.uint64).reshape(-1, 2); read_rec += a.shape[0]
+        Ik = cp.asarray(np.ascontiguousarray(a[:, 0])); Iid = cp.asarray(np.ascontiguousarray(a[:, 1])); del a, blk
+        Ik_s, Iid_s = G.sort_side(Ik, Iid); del Ik, Iid
+        for Dk_s, Did_s in Dch:
+            pd, pi = G.join_sorted(Dk_s, Did_s, Ik_s, Iid_s)
+            if pd.size == 0: continue
+            pairs += int(pd.size)
+            for d, i in zip(G.decode_ids(pd, r, 6), G.decode_ids(pi, r, 8)):
+                D = [B0[x] for x in d]; I = [INS[x] for x in i]
+                prodD = 1
+                for p in D: prodD *= p
+                prodI = 1
+                for p in I: prodI *= p
+                if (P0 * prodI) % prodD: continue
+                n = P0 * prodI // prodD
+                if n >= cur_U(): continue
+                below += 1; fac = sorted((B0set - set(D)) | set(I))
+                if consider((M, tag, r, hmax), fac, f"mstar_{tag}_r{r}_h<={hmax}"): nb += 1
+                if rmin is None or n < rmin: rmin = n
+        del Ik_s, Iid_s; cp.get_default_memory_pool().free_all_blocks()
+        if time.time() - t0 > IDUMP_TIMEOUT: timed_out = True; pr.kill(); break
+    pr.wait(); err = pr.stderr.read().decode(errors="replace"); nI = 0
+    for line in err.splitlines():
+        if line.startswith("TOTAL"): nI = int(line.split()[1])
+    del Dch; cp.get_default_memory_pool().free_all_blocks(); dt = time.time() - t0; state["instances"] += 1
+    if timed_out or read_rec != nI or pr.returncode != 0:
+        log(f"  {tag} r={r} h<={hmax}: INCOMPLETE ({'timeout' if timed_out else f'read {read_rec:,} != TOTAL {nI:,} rc={pr.returncode}'}) after {dt:.0f}s; NOT counted")
+        return False
+    state["pairs_total"] += pairs; state["completions_below_U"] += below
+    log(f"  {tag} r={r} h<={hmax} |INS|={len(INS)}: D {comb(K,r):,} {tD:.1f}s | I {nI:,} rec {dt:.0f}s pairs={pairs} below_U={below} "
+        f"min_digits={len(str(rmin)) if rmin else None} improved={nb} | GPU {gpu_used_gb():.1f}GB")
+    return True
+
+def main():
+    assert os.path.exists(IDUMP), IDUMP
+    P = pool(M, INS_PRIME_CAP); Pset = set(P)
+    bases = []
+    for tag in BASES:
+        if tag == "ksmall": bases.append(("ksmall", sorted(P)[:K]))
+        elif tag == "S64":
+            b = [p for p in U0_factors if p in Pset]; extra = [p for p in sorted(P) if p not in set(b)]
+            bases.append(("S64", sorted(b + extra[:K - len(b)])))
+    log(f"M={M} pool<{INS_PRIME_CAP}: {len(P)} eligible primes; bases={[t for t,_ in bases]}; radii {R_MIN}..{R_MAX}; SPLIT={SPLIT}; U={len(str(cur_U()))} digits")
+    save()
+    for r in range(R_MIN, R_MAX + 1):
+        for tag, B0 in bases:
+            if time.time() - T0 > WALL_CAP: state["status"] = "wall_cap_reached"; save(); log("WALL CAP"); return
+            INS = sorted([p for p in P if p not in set(B0)])[:INS_MAX]
+            key = f"{M}|{tag}|{hashlib.sha256(','.join(map(str,INS)).encode()).hexdigest()[:16]}|r{r}"
+            if key in state["done"]: log(f"  skip {tag} r={r} (identity {key} already completed)"); continue
+            hmax = hmax_for(B0, INS, r, cur_U())
+            if hmax < 0: log(f"  {tag} r={r}: no stratum can improve on U (bound); skipped"); state["done"].append(key); save(); continue
+            if run_instance(tag, B0, INS, r, hmax): state["done"].append(key)
+            save()
+    state["status"] = "complete"; save()
+    log("DONE", state["status"], "best_digits_seen:", state["best_digits_seen"], "incumbent improved:", state["incumbent"] is not None)
+
+if __name__ == "__main__": main()

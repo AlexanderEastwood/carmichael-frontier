@@ -40,21 +40,42 @@ for lst in ("JOBS", "SUBJOBS", "SUBJOBS2", "SUBJOBS3", "SUBJOBS4", "SUBJOBS5", "
             s = line.strip()
             if s: leaves.add(s)
 leaves -= REPLACED
-missing, bad, hits, none = [], [], [], 0
-for pfx in sorted(leaves):
+# Donation frontier (SUBJOBS9, depth 14 -> 18): the 5 hard depth-14 slices kept their single-core
+# workers AND had idle cores donated to their feasibility-pruned +4 children. Either verdict covers
+# the slice: its own n=NONE, or n=NONE on every one of its SUBJOBS9 children.
+ALT = {}
+p9 = os.path.join(JD, "SUBJOBS9")
+if os.path.exists(p9):
+    for line in open(p9):
+        s = line.strip()
+        if not s: continue
+        ALT.setdefault(",".join(s.split(",")[:14]), []).append(s)
+def verdict(pfx):
     f = os.path.join(JD, pfx.replace(",", "_") + ".out")
-    if not os.path.exists(f): missing.append(pfx); continue
+    if not os.path.exists(f): return "MISSING"
     txt = open(f, errors="replace").read()
-    if "\nn=NONE\n" in txt or txt.startswith("n=NONE") or "\nn=NONE" in txt: none += 1
-    elif any(l.startswith("n=") and l[2:3].isdigit() for l in txt.splitlines()): hits.append(pfx)
-    else: bad.append(pfx)
+    if "\nn=NONE\n" in txt or txt.startswith("n=NONE") or "\nn=NONE" in txt: return "NONE"
+    if any(l.startswith("n=") and l[2:3].isdigit() for l in txt.splitlines()): return "HIT"
+    return "BAD"
+missing, bad, hits, none, via_children = [], [], [], 0, 0
+for pfx in sorted(leaves):
+    v = verdict(pfx)
+    if v == "NONE": none += 1; continue
+    if v == "HIT": hits.append(pfx); continue
+    if pfx in ALT:  # own run unfinished: accept full coverage by the donated children instead
+        cv = [(c, verdict(c)) for c in ALT[pfx]]
+        if all(x == "NONE" for _, x in cv): none += 1; via_children += 1; continue
+        ch = [c for c, x in cv if x == "HIT"]
+        if ch: hits.extend(ch); continue
+        missing.append(f"{pfx} (own {v}; children unfinished {sum(1 for _, x in cv if x != 'NONE')}/{len(cv)})"); continue
+    (missing if v == "MISSING" else bad).append(pfx)
 # any hit in ANY verdict file (belt and braces, including replaced prefixes' partial runs)
 extra_hits = []
 for f in glob.iglob(os.path.join(JD, "*.out")):
     for l in open(f, errors="replace"):
         if l.startswith("n=") and l[2:3].isdigit(): extra_hits.append(os.path.basename(f)); break
 ok = not missing and not bad and not hits and not extra_hits
-rep = [f"leaf_jobs={len(leaves)} verdict_NONE={none} missing={len(missing)} no_verdict={len(bad)} hits={len(hits)} hits_anywhere={len(extra_hits)}"]
+rep = [f"leaf_jobs={len(leaves)} verdict_NONE={none} (via_children={via_children}) missing={len(missing)} no_verdict={len(bad)} hits={len(hits)} hits_anywhere={len(extra_hits)}"]
 rep += [f"MISSING {m}" for m in missing[:20]] + [f"NOVERDICT {b}" for b in bad[:20]] + [f"HIT {h}" for h in hits + extra_hits]
 rep.append("RESULT=ALL_NONE_VERIFIED" if ok else "RESULT=NOT_VERIFIED")
 out = "\n".join(rep) + "\n"; print(out, end="")
