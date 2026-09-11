@@ -107,6 +107,7 @@ static void build_sieve() {
 // -------------------------------------------------------------- statistics ---
 struct Stats {
     unsigned long long N_E = 0;  // extensions examined (recursive descents)
+    unsigned long long N_SKIP_LO = 0;  // base-case entries whose AP start was advanced by --lo
     unsigned long long N_I = 0;  // terminal inversions (base-case entries)
     unsigned long long N_F = 0;  // first rejection tests (AP candidates screened)
     unsigned long long N_H = 0;  // candidates surviving the cheap screen (reach the leaf)
@@ -135,6 +136,8 @@ static int g_k;                          // target factor count
 // point -- which the harness asserts. DYNT_FREEZE pins the incumbent so both
 // arms traverse identically-bounded space and collect the same completion set.
 static bool g_freeze = false;             // DYNT_FREEZE: never shrink g_best; just collect
+static mpz_class g_lo(0);                 // DYNT_LO / --lo: only completions n > g_lo matter
+                                          // (the interval (g_lo, bound] endgame; 0 = whole range)
 static unsigned long long g_kmax = 0;     // DYNT_KMAX: early-switch threshold (0 => production)
 static std::vector<mpz_class> g_completions;  // every Korselt-passing n < g_best in the (sub)tree
 static unsigned long long g_max_R_bits = 0;   // widest cofactor R actually factored (bits)
@@ -363,6 +366,18 @@ static void base_case(const mpz_class& P, const mpz_class& lam, uint32_t pmax,
         r = rstar;                                              // advance AP start
     }
 #endif
+    // Interval restriction: with everything <= g_lo already excluded, only R with P*R > g_lo can
+    // matter, i.e. R >= floor(g_lo/P)+1 (if R <= floor(g_lo/P) then P*R <= g_lo). Advance the AP start
+    // to the first term of the class at or above that value -- exact, no candidate in (g_lo, bound] lost.
+    if (g_lo > 0) {
+        mpz_class rlo = g_lo / P + 1;
+        if (r < rlo) {
+            mpz_class d = rlo - r;
+            mpz_class j = (d + lam - 1) / lam;   // ceil((rlo - r)/lam)
+            r += j * lam;
+            S.N_SKIP_LO += 1;
+        }
+    }
     mpz_class limit = g_best / P;        // R <= bound/P
     for (; r <= limit; r += lam) {
         ++S.N_F;
@@ -437,7 +452,11 @@ static void rec(const mpz_class& P, const mpz_class& lam, uint32_t pmax, int t,
     // KMAX=0 recovers the production rule exactly. Completeness is unchanged
     // (SW Thm 11): base_case exhausts the same completions regardless of t.
     if (!switch_now && g_kmax > 0) {
-        mpz_class kupper = (g_best / P) / lam;        // >= actual candidate count K(P)
+        // Interval-aware AP-length bound: R ranges over (g_lo/P, g_best/P], so the candidate count
+        // is at most ((g_best - g_lo)/P)/lambda. Still no modular inverse (the alignment can only
+        // reduce the count further).
+        mpz_class span = (g_lo > 0 && g_lo < g_best) ? (g_best - g_lo) : g_best;
+        mpz_class kupper = (span / P) / lam;          // >= actual candidate count K(P)
         mpz_class kmaxz((unsigned long)g_kmax);       // GMP lacks an unsigned-long-long comparator
         if (kupper <= kmaxz) switch_now = true;
     }
@@ -525,6 +544,8 @@ int main(int argc, char** argv) {
             g_freeze = true;
         } else if (a.rfind("--kmax=", 0) == 0) {
             g_kmax = std::stoull(a.substr(7));
+        } else if (a == "--lo" && i + 1 < argc) {
+            g_lo = mpz_class(argv[++i]);
         } else if (user_bound == 0) {
             user_bound = mpz_class(a.c_str());
         }
@@ -532,6 +553,7 @@ int main(int argc, char** argv) {
     // env overrides so an A/B harness can sweep without rebuilding argv
     if (const char* e = std::getenv("DYNT_FREEZE")) { if (*e && std::string(e) != "0") g_freeze = true; }
     if (const char* e = std::getenv("DYNT_KMAX"))   { g_kmax = std::strtoull(e, nullptr, 10); }
+    if (const char* e = std::getenv("DYNT_LO"))     { if (*e) g_lo = mpz_class(e); }
 
     build_sieve();
 
@@ -608,6 +630,11 @@ int main(int argc, char** argv) {
     std::cout << "survivor_frac=" << (S.N_H > 0 ? (double)S.N_G / S.N_H : 0) << "\n";
     // ---- dynamic-t A/B metrics: switch knobs, completion set, residual width --
     std::sort(g_completions.begin(), g_completions.end());
+    if (const char* e = std::getenv("DYNT_DUMP")) {           // A/B gate: print every completion
+        if (*e && std::string(e) != "0")
+            for (const mpz_class& c : g_completions) std::cout << "COMPLETION " << c << "\n";
+    }
+    std::cout << "dynt_lo=" << g_lo << " n_skip_lo=" << S.N_SKIP_LO << "\n";
     std::cout << "dynt_kmax=" << g_kmax << " freeze=" << (g_freeze ? 1 : 0)
               << " completions=" << g_completions.size()
               << " min_completion=" << (g_completions.empty() ? mpz_class(0) : g_completions.front())
