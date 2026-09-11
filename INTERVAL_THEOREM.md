@@ -4,13 +4,13 @@
 
 $$10^{145} \;\le\; S_{64} \;\le\; N \;<\; 10^{148},$$
 
-so **S₆₄ has 146, 147, or 148 decimal digits.** Here `N` is an explicit, oracle-verified
-148-digit Carmichael number with exactly 64 prime factors. This is a global statement about
-`S₆₄` — *not* a determination of it (that would require excluding every 64-factor Carmichael in
-the open interval `(10^145, N)`).
+so **S₆₄ has 146, 147, or 148 decimal digits**, and the remaining exclusion interval is
+`[10^145, N)`. Here `N` is an explicit, oracle-verified 148-digit Carmichael number with exactly 64
+prime factors. This is a global statement about `S₆₄` — *not* a determination of it (that would
+require excluding every 64-factor Carmichael in `[10^145, N)`).
 
-The full write-up with proofs is [`paper/interval_theorem.tex`](paper/interval_theorem.tex)
-(compiles to a 4-page PDF).
+Full write-up with proofs: [`paper/interval_theorem.tex`](paper/interval_theorem.tex) (5-page PDF).
+Everything below is at repository revision `f872e32`.
 
 ---
 
@@ -22,56 +22,90 @@ The full write-up with proofs is [`paper/interval_theorem.tex`](paper/interval_t
 19·29·31·37·41·43·47·53·61·67·71·73·79·89·97·101·103·109·113·127·131·137·139·151·157·163·167·181·193·197·199·211·239·241·251·257·271·277·281·307·313·331·337·353·379·397·401·421·433·449·461·463·491·541·547·577·599·631·673·811·829·883·1951·3697
 ```
 
-- **Re-derive `N` by multiplying the factor list** — don't trust a pasted decimal. The value and
-  metadata are in `results_k64_best_global.json` (modulus `1768248177696000`).
-- **Independently verified** by `ref/ref_carmichael.py::verify_certificate`: squarefree, 64
-  distinct primes (independent Miller–Rabin), Korselt `(p−1)|(N−1)` for every `p`. `10^147 ≤ N < 10^148`.
-- Sits between Webster's known neighbours `N₆₃` (145 digits) and the `N₆₅` candidate (151 digits),
-  where a true `S₆₄` must lie. Still an **upper bound**, not a certified minimum.
+- **Re-derive `N` by multiplying the factor list** — don't trust a pasted decimal. Value + metadata
+  in [`results_k64_best_global.json`](results_k64_best_global.json).
+- **Verification.** Every factor is `≤ 3697`, so its primality is certified by exact trial division
+  (deterministic at this size). Squarefree, 64 distinct primes, and Korselt `(p−1)|(N−1)` for every
+  `p` — equivalently `λ(N) = lcm(p−1) = 589416059232000` and `N ≡ 1 (mod λ(N))`. `10^147 ≤ N < 10^148`.
+  Checked by `ref/ref_carmichael.py::verify_certificate` (shares no code with the search).
+- **Found** by exchange meet-in-the-middle at modulus `M = 3·λ(N) = 1768248177696000` (so `N ≡ 1
+  mod M`; `M` is the *search modulus*, not `λ(N)`). An **upper bound**, not a certified minimum.
+- Consistent with the neighbours *by digit length + the proved interval*, not by any general
+  monotonicity of `Sₖ`: Webster's `N₆₃` has 145 digits (so `N₆₃ < 10^145 ≤ S₆₄`) and the `N₆₅`
+  candidate has 151 digits (so it exceeds `N`). The original 149-digit candidate is in
+  [`results_k64.json`](results_k64.json) / [`RESULTS_k64.md`](RESULTS_k64.md).
 
 ## Lower bound — no 64-factor Carmichael below 10¹⁴⁵ (finite exhaustion)
 
-Two steps, both exact-integer:
+**1. Certified prime universe.** For every 64-factor Carmichael `n` and every prime factor `q | n`,
+the remaining 63 factors satisfy `n/q ≥ C`, a **142-digit constant** `C = 1812…3549`. The bound is
+`C = min_A (∏_{p∈A} p)·∏ᵢ bᵢ(A)`, where `A` ranges over internally admissible subsets of the odd
+primes ≤ 97 and the `bᵢ(A)` are the increasing primes > 97 individually compatible with `A`; the
+actual cofactor tail `rᵢ ≥ bᵢ(A)`, so this is a genuine lower bound. Three points: the `bᵢ(A)` may
+conflict with *each other* (ignoring that only lowers the product); the finite prime table (odd
+primes ≤ 10⁴) is checked to hold enough eligible primes for every class; the cofactor need not
+itself be Carmichael. `C` is a *certified* lower bound, not necessarily the smallest possible
+admissible 63-factor product. Hence any `n < 10^145` has largest prime factor
+`P⁺(n) ≤ ⌊(10^145−1)/C⌋ = 5518` — a universe of **727 odd primes** (largest 5507).
+Tool: `carmichael_prime_bound.py`.
 
-1. **Certified prime universe.** Korselt's pairwise condition (if `p | q−1` then `p`, `q` can't both
-   divide a Carmichael `n`) forces the 63 smallest ("cofactor") primes of any 64-factor Carmichael
-   to multiply to at least a **142-digit constant** `C = 1812…3549`, independent of any modulus.
-   Hence any such `n < 10^145` has largest prime factor `P⁺(n) ≤ ⌊(10^145−1)/C⌋ = 5518` — a universe
-   of just **727 odd primes** (largest 5507). Tool: `carmichael_prime_bound.py`.
-2. **Exhaustion.** Enumerate every admissible increasing 64-subset of those 727 primes with product
-   `< 10^145` (pruning only on necessary conditions; pairwise admissibility enforced during descent,
-   which discards no genuine Carmichael). There are exactly **127,092** such complete products, and
-   **none is Carmichael.** Therefore `S₆₄ ≥ 10^145`.
+**2. Exhaustion.** Enumerate every increasing pairwise-admissible 64-subset of those 727 primes with
+product `< 10^145`, pruning only on necessary conditions (too few primes remain; or current product
+× the `64−h` smallest still-available primes individually compatible with the `h` already chosen
+reaches `10^145`). Pairwise admissibility (if `p | q−1`, drop `q` after choosing `p`) is enforced
+during descent and discards no genuine Carmichael. There are exactly **127,092** such products
+(distinct, by unique factorization), and **none is Carmichael.** Therefore `S₆₄ ≥ 10^145`.
 
-### Reproduced three independent ways (all agree: 127,092 products, 0 Carmichael)
+> The count means precisely: increasing, pairwise-admissible 64-subsets of the certified 727-prime
+> universe with product below 10¹⁴⁵. Keep that qualification — it is *not* "all products of 64
+> distinct primes below 10¹⁴⁵."
 
-| # | Implementation | Nodes | Korselt verdict from | Result |
-|---|---|---|---|---|
-| 1 | `s64_lower_bound_certificate.py`, binary enumerator | 327,049 | incremental `lcm(pᵢ−1)` | 0 hits |
-| 1 | same file, ordered independent enumerator | 163,525 | per-prime `(n−1)%(pᵢ−1)` | 0 hits |
-| 2 | `carmichael_prime_bound.py` | — | (recomputes `C`, universe) | `P⁺ ≤ 5518` |
-| 3 | our enumerator, oracle-gated | 163,525 | **frozen oracle** `verify_certificate` | 0 hits |
+### Reproduction — three enumeration implementations agree; the cofactor bound independently recomputed
 
-- Enumerators (1) share no code path — different prime generators, traversals, and Korselt tests —
-  yet agree on the count, the minimum product, and an **identical order-sensitive leaf digest**
-  `sha256 = e05f62598eea784b3f60f025c6ccbf30700115ecbef42702e24154dcece32321`.
-- Enumerator (3) takes every one of the 127,092 leaf verdicts from the frozen reference oracle, not
-  from its own arithmetic, and was validated first against the oracle's brute-force `least_with_k`:
-  `k=3 → 561`, `k=4 → 41041`, `k=5 → 825265` (all exact).
+| Implementation | Nodes | Korselt verdict from | Result |
+|---|---|---|---|
+| `s64_lower_bound_certificate.py`, binary enumerator | 327,049 | incremental `lcm(pᵢ−1)` | 127,092 products, 0 Carmichael |
+| same file, ordered enumerator | 163,525 | per-prime `(n−1)%(pᵢ−1)` | 127,092 products, 0 Carmichael |
+| `s64_lower_bound_oracle_check.py`, clean-room, **oracle-gated** | 163,525 | **frozen oracle** `verify_certificate` | 127,092 products, 0 Carmichael |
+
+- The two enumerators in the certificate use **different prime generators, traversal logic, and
+  Korselt tests**, while **sharing** the cofactor-bound computation and the results/hash reporting
+  code. Their identical order-sensitive leaf digest
+  `sha256 = e05f62598eea784b3f60f025c6ccbf30700115ecbef42702e24154dcece32321` is a **reproducibility
+  aid**, not an extra independent correctness check (the hashing is shared). Correctness comes from
+  the algorithmic coverage argument.
+- The third enumerator is separate clean-room code that defers every leaf verdict to the frozen
+  oracle; it was validated first against the oracle's brute-force `least_with_k`: `k=3 → 561`,
+  `k=4 → 41041`, `k=5 → 825265`.
+- Separately, **`carmichael_prime_bound.py`** independently recomputes `C` and `P⁺ ≤ 5518`. It does
+  *not* enumerate products or establish the absence of Carmichael numbers — it certifies only the
+  universe.
+
+Commands: `python3 s64_lower_bound_certificate.py` · `python3 carmichael_prime_bound.py --X 1e145 --pi`
+· `python3 s64_lower_bound_oracle_check.py`.
 
 ## What's next
 
-Running the same certified machinery at `Y = 10^146` would either surface a smaller Carmichael
-number or prove `S₆₄ ≥ 10^146`, narrowing the interval to **147–148 digits**. Whether the direct
-enumerator suffices at `10^146` or the exchange decomposition is needed is open — that's the current
-work.
+**Completing** an exhaustive search at `Y = 10^146` would either surface a smaller Carmichael number
+or prove `S₆₄ ≥ 10^146`, narrowing the interval to **147–148 digits**. Measured (not extrapolated):
+at `10^146` the universe grows to 5605 odd primes and the admissible-product count to **≥ 38.9
+billion** — dominated (≈97.6%) by the smallest-prime-19 class — so this is a substantial partitioned
+computation, not a rerun. A capped, unfinished run establishes neither outcome.
 
 ## Provenance / credit
 
-Known values and neighbours (`k = 3–63`, `k = 65` candidate) are Webster's
-[`small-carmichael-numbers`](https://github.com/jewebste/small-carmichael-numbers) (Butler
-University for `k = 36–63`). The lower-bound certificate's design benefited from consultation with a
-large-language reasoning model (OpenAI GPT-6); the result here was independently reproduced by the
-three implementations above, one of them gated by the frozen oracle. Existence for all large factor
-counts is Alford–Grantham–Hayman–Shallue and Larsen–Wright; our contribution is the explicit
-*interval* bounding the minimum.
+Known values `3 ≤ k ≤ 63` (as of Sept 2026): R. G. E. Pinch (earlier `k`) and the Butler University
+computation (`k = 36–63`), collected in Webster's
+[`small-carmichael-numbers`](https://github.com/jewebste/small-carmichael-numbers) — the repository
+cited for the known values and the `N₆₃`/`N₆₅` neighbours. Two existence results of different scope,
+not to be merged: **Alford–Grantham–Hayman–Shallue** constructed examples for every
+`3 ≤ k ≤ 19,565,220`; **Larsen–Wright** proved existence for every sufficiently large factor count.
+Neither gives a minimum; our contribution is the explicit *interval* for `S₆₄`.
+
+AI assistance (OpenAI **GPT-6**, the model designation recorded for the session) contributed the
+lower-bound argument, generated the initial certificate code (`s64_lower_bound_certificate.py`), and
+ran the first computation. Independently of that script, the author recomputed the cofactor bound
+(`carmichael_prime_bound.py`) and wrote the separate oracle-gated enumerator
+(`s64_lower_bound_oracle_check.py`); rerunning the supplied certificate is not counted as a
+separately implemented proof. The author retains responsibility for the mathematics and code, and
+treats the model as an assistant, not a mathematical authority.

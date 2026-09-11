@@ -9,8 +9,9 @@ built to help push the frontier past the current record — and used here to fin
 > $$10^{145} \le S_{64} \le N < 10^{148},$$
 > where `N` is an oracle-verified **148-digit** Carmichael number with exactly 64 prime factors.
 > So **S₆₄ has 146, 147, or 148 digits.** The lower bound is a finite exhaustion (127,092
-> admissible products below 10¹⁴⁵, zero Carmichael), reproduced three independent ways. This is a
-> global bound on the minimum — **not** a determination of it. Full write-up:
+> admissible products below 10¹⁴⁵, zero Carmichael) by three separate enumeration implementations,
+> with the universe bound independently recomputed. This is a global bound on the minimum —
+> **not** a determination of it. Full write-up:
 > [`INTERVAL_THEOREM.md`](INTERVAL_THEOREM.md) and [`paper/interval_theorem.tex`](paper/interval_theorem.tex).
 
 Everything here is our own code, developed beside — not committed to — Jonathan Webster's

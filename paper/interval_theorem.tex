@@ -35,18 +35,23 @@ $10^{145}$. Together,
 \[
   10^{145} \;\le\; \Smin \;\le\; N \;<\; 10^{148},
 \]
-so $\Smin$ has $146$, $147$, or $148$ decimal digits. All arithmetic is exact; the lower bound is a
-reproducible computation, verified here by three independent implementations, one of which takes its
-Korselt verdicts from a frozen reference oracle that shares no code with the search.
+so $\Smin$ has $146$, $147$, or $148$ decimal digits. All arithmetic is exact. The lower bound is
+a reproducible computation: the admissible universe is bounded by a Korselt cofactor argument, the
+resulting bound is recomputed independently, and the exhaustion is carried out by three separate
+enumeration implementations, one of which takes its Korselt verdict at every leaf from a frozen
+reference oracle. The author is responsible for the mathematics and code; see the acknowledgements
+for the role of AI assistance.
 \end{abstract}
 
 \section{Statement}
 
-A \emph{Carmichael number} is a composite $n$ with $b^{n}\equiv b \pmod n$ for all integers $b$.
-By Korselt's criterion, $n$ is Carmichael iff it is squarefree and $(p-1)\mid(n-1)$ for every prime
-$p\mid n$. Write $\omega(n)$ for the number of distinct prime factors. The sequence
-$S_k=\min\{\,n : n \text{ Carmichael},\ \omega(n)=k\,\}$ is OEIS A006931; values are known for
-$3\le k\le 63$, and $S_{64}$ is open. This note proves:
+A \emph{Carmichael number} is a composite integer $n$ with $b^{n}\equiv b \pmod n$ for all integers
+$b$. By Korselt's criterion, a composite integer $n$ is Carmichael if and only if it is squarefree
+and $(p-1)\mid(n-1)$ for every prime $p\mid n$. Write $\omega(n)$ for the number of distinct prime
+factors. The sequence $S_k=\min\{\,n : n \text{ Carmichael},\ \omega(n)=k\,\}$ is
+OEIS~A006931; values are known for $3\le k\le 63$ (R.~G.~E.~Pinch for the smaller $k$; the
+$k=36$--$63$ values from the Butler University computation, collected in J.~Webster's repository
+cited below), and $S_{64}$ is open as of September~2026. This note proves:
 
 \begin{theorem}[Interval]\label{thm:interval}
 $10^{145}\le \Smin \le N$, where
@@ -54,7 +59,8 @@ $10^{145}\le \Smin \le N$, where
   N \;=\; 8664205557705627135892897321176984054850894080429746661350141011836598584916617361518185311595941924456408326192593430956147737016566872025613568001
 \]
 is a $148$--digit Carmichael number with exactly $64$ prime factors. Consequently $\Smin$ has
-$146$, $147$, or $148$ decimal digits.
+$146$, $147$, or $148$ decimal digits, and the remaining exclusion interval for $\Smin$ is
+$[10^{145},N)$.
 \end{theorem}
 
 The two bounds are proved in \S\ref{sec:upper} and \S\ref{sec:lower}. We use throughout the
@@ -68,9 +74,9 @@ odd.
 \begin{proof}
 Since $q\mid n$ we have $(q-1)\mid(n-1)$, so $n\equiv 1\pmod{d}$ for every divisor $d$ of $q-1$. If
 $p\mid(q-1)$ then $n\equiv 1\pmod p$; but $p\mid n$ gives $n\equiv 0\pmod p$, forcing $p\mid 1$, a
-contradiction. For oddness: if $n$ were even, an odd prime factor $p$ would make the even number
-$p-1$ divide the odd number $n-1$ (as $n$ is squarefree with an odd factor, $n-1$ is even only if
-$n$ is odd), which is impossible; concretely, no even number $>2$ is Carmichael.
+contradiction. Oddness: no even integer $>2$ is Carmichael, since for an odd prime factor $p$ the
+even number $p-1$ cannot divide the (then even) $n-1$ consistently with squarefreeness; concretely
+$2$ cannot be one of $k\ge 3$ distinct prime factors of a Carmichael number.
 \end{proof}
 
 \section{Upper bound}\label{sec:upper}
@@ -84,19 +90,24 @@ The number $N$ of Theorem~\ref{thm:interval} is the product of the $64$ primes
 &829,\,883,\,1951,\,3697.
 \end{aligned}
 \]
-These are $64$ distinct primes; their product is $N$ (re--derive $N$ by multiplying the list rather
-than trusting the printed decimal), and one checks $(p-1)\mid(N-1)$ for each. Hence $N$ is a
-squarefree Carmichael number with $\omega(N)=64$, and $\Smin\le N$. Since $10^{147}\le N<10^{148}$,
-the number $N$ has $148$ digits. The certificate is verified by
-\code{ref/ref\_carmichael.py::verify\_certificate}, an independent, dependency--free routine
-(independent Miller--Rabin primality, squarefreeness, and Korselt) sharing no code with the search
-that produced $N$.
+These are $64$ distinct primes; re-derive $N$ by multiplying the list rather than trusting the
+printed decimal. Each factor is at most $3697$, so its primality is certified by exact trial
+division (a deterministic check at this size). One verifies directly that $(p-1)\mid(N-1)$ for every
+$p$; equivalently, writing $\lambda(N)=\operatorname{lcm}_{p\mid N}(p-1)=589416059232000$, one has
+$N\equiv 1\pmod{\lambda(N)}$. Hence $N$ is a squarefree Carmichael number with $\omega(N)=64$, and
+$\Smin\le N$. Since $10^{147}\le N<10^{148}$, the number $N$ has $148$ digits. The certificate is
+verified by \code{ref/ref\_carmichael.py::verify\_certificate}, an independent, dependency--free
+routine (squarefreeness, distinctness, per--factor primality, and Korselt) sharing no code with the
+search that produced $N$.
 
 \begin{remark}
-$N$ is an incumbent found by an exchange meet--in--the--middle search; it is not claimed to be
-minimal. It improves a previously reported $149$--digit candidate and sits between Webster's known
-neighbours $N_{63}$ ($145$ digits) and the $N_{65}$ candidate ($151$ digits), where a true $\Smin$
-must lie.
+$N$ was found by an exchange meet--in--the--middle search at modulus $M=3\,\lambda(N)=1768248177696000$
+(so $N\equiv 1\pmod M$; $M$ is the search modulus, \emph{not} $\lambda(N)$ itself). It is an
+incumbent, not claimed minimal, and improves a previously reported $149$--digit candidate. Its
+$148$ digits are consistent with the known neighbours only in the following precise sense: Webster's
+$N_{63}$ has $145$ digits, hence $N_{63}<10^{145}\le\Smin$, and the $N_{65}$ candidate has $151$
+digits, hence exceeds $N$. This uses the proved interval and the stated digit lengths; it is not an
+appeal to any general monotonicity of $S_k$.
 \end{remark}
 
 \section{Lower bound}\label{sec:lower}
@@ -106,27 +117,33 @@ Fix $Y=10^{145}$. We show no $64$--factor Carmichael number lies below $Y$.
 \subsection{A certified prime universe}
 
 \begin{lemma}[Cofactor lower bound]\label{lem:C}
-Let $n$ be a Carmichael number with $\omega(n)=64$, and write its primes as
-$p_1<p_2<\dots<p_{63}<q$. Then
+There is an explicit constant
 \[
-  D_n \;:=\; \prod_{i=1}^{63} p_i \;\ge\; C,
-  \qquad
-  C \;=\; 1812140595092971804464959059612576188399713525008997620073689836850955613086867158799858934921557347504370550240044086773665823716701403213549,
+  C \;=\; 1812140595092971804464959059612576188399713525008997620073689836850955613086867158799858934921557347504370550240044086773665823716701403213549
 \]
-a $142$--digit integer, independent of $q$ and of any modulus.
+(a $142$--digit integer) such that for every Carmichael number $n$ with $\omega(n)=64$ and every
+prime factor $q\mid n$, the product of the remaining $63$ factors satisfies $n/q\ge C$.
 \end{lemma}
 
 \begin{proof}[Proof (finite computation)]
-The $63$ cofactor primes are odd (Lemma~\ref{lem:adm}) and pairwise admissible. Partition the
-argument on $S$, the set of cofactor primes that are $\le 97$; there are finitely many internally
-admissible such $S$ (each pair in $S$ satisfying Lemma~\ref{lem:adm}). Given $S$, the remaining
-$63-|S|$ cofactor primes exceed $97$ and are each individually admissible with every element of
-$S$; replacing them by the $63-|S|$ \emph{smallest} primes $>97$ that are individually admissible
-with $S$ can only decrease the product, and \emph{ignoring} the mutual admissibility constraints
-among those tail primes can only decrease it further. Thus for each admissible $S$ we obtain a
-rigorous lower bound on $\prod_i p_i$; taking the minimum over all $407760$ admissible $S$ gives the
-constant $C$. A finite prime table (odd primes $\le 10^4$) is used, and the computation checks that
-enough eligible tail primes are present for every $S$, so no smaller completion is truncated away.
+Fix such an $n$ and a prime factor $q$; let $p_1<\dots<p_{63}$ be the other factors, all odd
+(Lemma~\ref{lem:adm}) and pairwise admissible. Let $S$ be the set of these that are $\le 97$; there
+are finitely many internally admissible such $S$. For a fixed $S$, let $b_1(S)<b_2(S)<\cdots$ be the
+primes $>97$ that are \emph{individually} admissible with every element of $S$ (i.e.\ $p\nmid(b-1)$
+for all $p\in S$). The actual cofactor tail $r_1<\dots<r_{63-|S|}$ of $n$ consists of primes $>97$
+each admissible with $S$, so $r_i\ge b_i(S)$ for every $i$. Hence
+\[
+  n/q \;=\; \prod_{p\in S}p \cdot \prod_{i=1}^{63-|S|} r_i
+  \;\ge\; F(S) \;:=\; \Big(\prod_{p\in S}p\Big)\prod_{i=1}^{63-|S|} b_i(S)
+  \;\ge\; \min_{S} F(S) \;=\; C.
+\]
+Three points make this rigorous: (i) the $b_i(S)$ need not be pairwise admissible with one another,
+but ignoring those further constraints only decreases the product, so $F(S)$ is a genuine lower
+bound; (ii) the computation uses a finite prime table (odd primes $\le 10^4$) and checks, for every
+enumerated $S$, that it contains enough eligible tail primes, so no smaller completion is truncated
+away; (iii) the cofactor $n/q$ itself need not be Carmichael. The minimum is taken over all
+$407760$ admissible $S$. Thus $C$ is a certified lower bound on the cofactor product; it is not
+claimed to be the smallest possible admissible $63$--factor product.
 \end{proof}
 
 \begin{corollary}[Universe]\label{cor:univ}
@@ -139,7 +156,8 @@ largest being $5507$).
 \end{corollary}
 
 \begin{proof}
-$n=q\,D_n\ge q\,C$ by Lemma~\ref{lem:C}, and $n<Y$ gives $q\le(Y-1)/C$; evaluate the floor.
+Take $q=\Pp(n)$ the largest factor; then $n=q\cdot(n/q)\ge q\,C$ by Lemma~\ref{lem:C}, and $n<Y$
+gives $q\le(Y-1)/C$; evaluate the floor. Every other factor is smaller, hence also $\le 5518$.
 \end{proof}
 
 \subsection{Exhaustion}
@@ -151,60 +169,85 @@ There is no Carmichael number $n<10^{145}$ with $\omega(n)=64$. Hence $\Smin\ge 
 \begin{proof}[Proof (finite exhaustion)]
 By Corollary~\ref{cor:univ} every candidate is a product of $64$ distinct primes drawn from the
 universe $U$ of $727$ odd primes $\le 5518$, with product $<Y$. Enumerate all increasing
-$64$--subsets of $U$ with product $<Y$, pruning a partial choice only by two necessary conditions:
-(i) too few primes remain to reach $64$; and (ii) the product of the current choice times the
-smallest admissible primes still available already reaches $Y$ (an exact--integer $R_{\min}$ test).
-Pairwise admissibility (Lemma~\ref{lem:adm}) is enforced during descent---once $p$ is chosen, every
-later prime $q$ with $p\mid(q-1)$ is discarded---which removes no genuine Carmichael candidate. At
-each complete $64$--product, test Korselt.
+$64$--subsets of $U$ with product $<Y$, pruning a partial choice only by two \emph{necessary}
+conditions: (i) fewer than the required number of primes remain; and (ii) the current product times
+the $64-h$ smallest still-available primes individually compatible with the $h$ already chosen
+already reaches $Y$ (an exact--integer $R_{\min}$ test). Pairwise admissibility
+(Lemma~\ref{lem:adm}) is enforced during descent---once $p$ is chosen, every later prime $q$ with
+$p\mid(q-1)$ is discarded---which removes no genuine Carmichael candidate, since any real completion
+survives pairwise filtering and its remaining factors lie in the current available pool. At each
+complete $64$--product, test Korselt.
 
-The enumeration terminates with exactly $127092$ admissible complete products below $Y$, of which
-\emph{none} is Carmichael. Therefore no $64$--factor Carmichael number is smaller than $10^{145}$.
+The enumeration terminates with exactly $127092$ increasing pairwise--admissible $64$--subsets of
+$U$ whose product is below $Y$ (equivalently $127092$ distinct products, by unique factorization),
+of which \emph{none} is Carmichael. Therefore no $64$--factor Carmichael number is smaller than
+$10^{145}$.
 \end{proof}
 
 \subsection{Reproducibility}\label{sec:repro}
 
-The lower bound was computed three independent ways, all agreeing:
+The exhaustion was carried out by \emph{three separate enumeration implementations}, and the
+universe bound $C$ was \emph{independently recomputed}; all agree. Everything below is at repository
+revision \code{f872e32} of \href{https://github.com/AlexanderEastwood/carmichael-frontier}{\code{AlexanderEastwood/carmichael-frontier}}.
 
 \begin{enumerate}
-\item A self--contained certificate (\code{s64\_lower\_bound\_certificate.py}) that recomputes $C$
-and the universe, then runs \emph{two} disjoint enumerators---a binary include/exclude walk using an
-incrementally maintained $\operatorname{lcm}(p_i-1)$ for the Korselt test ($327049$ nodes), and an
-ordered--choice walk using direct per--prime divisibility, a separate prime generator, and no
-bitmasks ($163525$ nodes). Both report $127092$ admissible products, $0$ Carmichael, and an
-identical order--sensitive leaf digest
-\code{sha256 = e05f62598eea784b3f60f025c6ccbf30700115ecbef42702e24154dcece32321}.
-\item An independent prime--bound tool (\code{carmichael\_prime\_bound.py}) that recomputes $C$ and
-$\Pp\le 5518$ from first principles.
-\item A separate enumerator that takes the Korselt verdict at every one of the $127092$ leaves from
-the frozen oracle \code{ref/ref\_carmichael.py} rather than from its own arithmetic, again finding
-$0$ Carmichael. This enumerator was validated against the oracle's brute--force
+\item \code{s64\_lower\_bound\_certificate.py} runs two enumerators: a binary include/exclude walk
+with an incrementally maintained $\operatorname{lcm}(p_i-1)$ Korselt test ($327049$ reference
+nodes), and an ordered--choice walk using per--prime divisibility, a separate prime generator, and
+no bitmasks ($163525$ nodes). Both report $127092$ admissible products and $0$ Carmichael. They use
+different prime generators, traversal logic, and Korselt predicates, while \emph{sharing} the
+cofactor--bound computation and the results/hash reporting code; the identical order--sensitive leaf
+digest \code{sha256 = e05f62598eea784b3f60f025c6ccbf30700115ecbef42702e24154dcece32321} is therefore
+a reproducibility aid, not an additional independent correctness check.
+\item \code{carmichael\_prime\_bound.py} independently recomputes $C$ and the cap $\Pp\le 5518$ from
+first principles. It does \emph{not} enumerate products or establish the absence of Carmichael
+numbers; it certifies only the universe.
+\item \code{s64\_lower\_bound\_oracle\_check.py} is a separate clean--room enumerator (its own
+prime generation and ordered traversal) that takes the Korselt verdict at every one of the $127092$
+leaves from the frozen oracle \code{ref/ref\_carmichael.py::verify\_certificate} rather than from
+its own arithmetic, again finding $0$ Carmichael. It was validated against the oracle's brute--force
 \code{least\_with\_k} on small $k$: $k=3\!\to\!561$, $k=4\!\to\!41041$, $k=5\!\to\!825265$.
 \end{enumerate}
+
+\noindent Exact commands: \code{python3 s64\_lower\_bound\_certificate.py};
+\code{python3 carmichael\_prime\_bound.py -{}-X 1e145 -{}-pi};
+\code{python3 s64\_lower\_bound\_oracle\_check.py}.
 
 \section{The interval}
 
 Combining Theorem~\ref{thm:lower} (lower) with \S\ref{sec:upper} (upper) proves
 Theorem~\ref{thm:interval}: $10^{145}\le\Smin\le N<10^{148}$, so $\Smin$ has $146$, $147$, or $148$
-digits. This is a global statement about $\Smin$; it is \emph{not} a determination of $\Smin$, which
-would require excluding every $64$--factor Carmichael number in the open interval $(10^{145},N)$.
+digits, with remaining exclusion interval $[10^{145},N)$. This is a global statement about $\Smin$;
+it is \emph{not} a determination of $\Smin$, which would require excluding every $64$--factor
+Carmichael number in $[10^{145},N)$.
 
 \begin{remark}[Next step]
-The same certified machinery run at $Y=10^{146}$ would either exhibit a smaller Carmichael number or
-prove $\Smin\ge 10^{146}$, in the latter case narrowing the interval to $147$--$148$ digits. The
-universe and the admissible--product count grow with $Y$; whether the direct enumerator suffices at
-$10^{146}$ or the exchange decomposition is required is the subject of ongoing work.
+Completing an exhaustive search at $Y=10^{146}$ would either exhibit a smaller Carmichael number or
+prove $\Smin\ge 10^{146}$, in the latter case narrowing the interval to $147$--$148$ digits. At
+$10^{146}$ the certified universe grows to $5605$ odd primes and the admissible--product count to at
+least $3.89\times10^{10}$ (measured, not extrapolated), so this is a substantial computation rather
+than a rerun. A capped, unfinished run establishes neither outcome.
 \end{remark}
 
 \section*{Acknowledgements}
 
-The known values and neighbours for $k=3$--$63$ (and the $k=65$ candidate) are from Jonathan
-Webster's \href{https://github.com/jewebste/small-carmichael-numbers}{\code{small-carmichael-numbers}}
-(Butler University for $k=36$--$63$). The design of the lower--bound certificate benefited from
-consultation with a large--language reasoning model (OpenAI GPT--6); the result reported here was
-independently reproduced by the three implementations of \S\ref{sec:repro}, including one gated by
-the frozen oracle. Existence of Carmichael numbers with every large factor count is due to
-Alford--Grantham--Hayman--Shallue and Larsen--Wright; the values above are new only as bounds on the
-\emph{minimum}.
+The known values for $3\le k\le 63$ are due to R.~G.~E.~Pinch (earlier $k$) and, for $k=36$--$63$,
+the Butler University computation; both are collected in J.~Webster's
+\href{https://github.com/jewebste/small-carmichael-numbers}{\code{small-carmichael-numbers}}, the
+repository cited here for the known values and the $N_{63}$, $N_{65}$ neighbours. Two existence
+results, of different scope, are relevant and should not be conflated: Alford, Grantham, Hayman, and
+Shallue constructed Carmichael numbers with exactly $k$ prime factors for every
+$3\le k\le 19{,}565{,}220$; Larsen and Wright proved that Carmichael numbers exist for every
+sufficiently large factor count. Neither determines a minimum; the contribution reported here is an
+explicit interval for the minimum $S_{64}$.
+
+AI assistance (OpenAI GPT--6, the model designation recorded for the working session) contributed
+the lower--bound argument, generated the initial certificate code
+(\code{s64\_lower\_bound\_certificate.py}), and executed the first computation. Independently of that
+script, the author recomputed the cofactor bound $C$ (\code{carmichael\_prime\_bound.py}) and wrote
+a separate oracle--gated enumerator (\code{s64\_lower\_bound\_oracle\_check.py}); rerunning the
+supplied certificate is not counted as a separately implemented proof. The author retains
+responsibility for the mathematics and the code, and treats the model as an assistant rather than a
+mathematical authority.
 
 \end{document}
